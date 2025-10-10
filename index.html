@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How to Upload to GitHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900">Upload Your Project to GitHub</h1>
+            <p class="text-lg text-slate-600 mt-2">A step-by-step guide to get your project repository online.</p>
+        </header>
+
+        <main class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 border-b pb-2 mb-4">Prerequisites</h2>
+                <ul class="list-disc list-inside space-y-2 text-slate-700">
+                    <li>You have <a href="https://git-scm.com/downloads" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-semibold">Git</a> installed on your computer.</li>
+                    <li>You have a <a href="https://github.com/join" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-semibold">GitHub account</a>.</li>
+                    <li>Your project files are in a dedicated folder on your local machine.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold text-slate-800 border-b pb-2 mb-6">Instructions</h2>
+                <ol class="space-y-8">
+                    <li class="flex flex-col">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">Step 1: Initialize a Git Repository</h3>
+                        <p class="text-slate-600 mb-3">Open your terminal or command prompt, navigate to your project's root directory, and run the following command. This creates a new, hidden `.git` folder that will track all your changes.</p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto"><code>git init</code></pre>
+                    </li>
+                    <li class="flex flex-col">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">Step 2: Add All Files to Staging</h3>
+                        <p class="text-slate-600 mb-3">This command "stages" all the files in your project, preparing them for the first snapshot (commit).</p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto"><code>git add .</code></pre>
+                    </li>
+                    <li class="flex flex-col">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">Step 3: Make Your First Commit</h3>
+                        <p class="text-slate-600 mb-3">A commit saves the staged changes to your local repository's history. The `-m` flag lets you add a descriptive message.</p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto"><code>git commit -m "Initial commit"</code></pre>
+                    </li>
+                    <li class="flex flex-col">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">Step 4: Create a New Repository on GitHub</h3>
+                        <p class="text-slate-600 mb-3">Go to <a href="https://github.com/new" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-semibold">github.com/new</a>. Give your repository a name (e.g., `ai-interior-designer`), choose whether it should be public or private, and click "Create repository". <strong>Do not</strong> initialize it with a README, .gitignore, or license file, as your project already has these files.</p>
+                    </li>
+                    <li class="flex flex-col">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">Step 5: Link Your Local and Remote Repositories</h3>
+                        <p class="text-slate-600 mb-3">GitHub will provide you with a URL for your new repository. Copy the command below and replace `YOUR_GITHUB_REPOSITORY_URL` with that URL. This tells your local Git where to send the files.</p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto"><code>git remote add origin YOUR_GITHUB_REPOSITORY_URL</code></pre>
+                        <p class="text-slate-600 mt-4 mb-3">Next, it's good practice to rename the default branch from `master` to `main` to align with modern standards.</p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto"><code>git branch -M main</code></pre>
+                    </li>
+                     <li class="flex flex-col">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">Step 6: Push Your Code to GitHub</h3>
+                        <p class="text-slate-600 mb-3">Finally, this command uploads your committed files from your local `main` branch to the `origin` (your GitHub repository).</p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto"><code>git push -u origin main</code></pre>
+                    </li>
+                </ol>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-slate-500 text-sm">
+            <p>You're all set! Your code is now live on GitHub.</p>
+        </footer>
+    </div>
+</body>
+</html>
