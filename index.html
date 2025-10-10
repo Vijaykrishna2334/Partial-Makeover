@@ -1,342 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Interior Designer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script type="importmap">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Interior Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="importmap">
 {
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.1.1",
-    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.1.1/client",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
-  }
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.1.1/client",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
 }
 </script>
-  </head>
-  <body class="bg-slate-50">
-    <div id="root"></div>
-    <script type="text/babel" data-type="module">
-        import React, { useState, useCallback, useMemo, useEffect } from 'react';
-        import ReactDOM from 'react-dom/client';
-        import { GoogleGenAI, Modality } from "@google/genai";
+  </head>
+  <body class="bg-slate-50">
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useCallback, useMemo, useEffect } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { GoogleGenAI, Modality } from "@google/genai";
 
-        // --- From types.ts ---
-        const AppStep = {
-            Upload: 'Upload',
-            Customize: 'Customize',
-            Generating: 'Generating',
-            Result: 'Result',
-        };
+        // --- From types.ts ---
+        const AppStep = {
+            Upload: 'Upload',
+            Customize: 'Customize',
+            Generating: 'Generating',
+            Result: 'Result',
+        };
 
-        // --- From components/icons.tsx ---
-        const UploadIcon = ({ className }) => (
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
-          </svg>
-        );
+        // --- From components/icons.tsx ---
+        const UploadIcon = ({ className }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+          </svg>
+        );
 
-        const CheckCircleIcon = ({ className }) => (
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-            <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-          </svg>
-        );
+        const CheckCircleIcon = ({ className }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+            <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+          </svg>
+        );
 
-        const SparklesIcon = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
-            </svg>
-        );
+        const SparklesIcon = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+            </svg>
+        );
 
-        const DownloadIcon = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-        );
+        const DownloadIcon = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+        );
 
-        // --- From constants.ts ---
-        const ROOM_TYPE_OPTIONS = [
-            { value: 'Living Room', label: 'Living Room' },
-            { value: 'Primary Bedroom', label: 'Primary Bedroom' },
-            { value: 'Kitchen', label: 'Kitchen' },
-            { value: 'Dining Room', label: 'Dining Room' },
-            { value: 'Home Office', label: 'Home Office' },
-            { value: 'Full Bathroom', label: 'Full Bathroom' },
-            { value: 'Game Room', label: 'Game Room' },
-            { value: 'Walk-in Closet', label: 'Walk-in Closet' },
-            { value: 'Content Creator Room', label: 'Content Creator Room' },
-            { value: 'Pet Room', label: 'Pet Room' },
-        ];
+        // --- From constants.ts ---
+        const ROOM_TYPE_OPTIONS = [
+            { value: 'Living Room', label: 'Living Room' },
+            { value: 'Primary Bedroom', label: 'Primary Bedroom' },
+            { value: 'Kitchen', label: 'Kitchen' },
+            { value: 'Dining Room', label: 'Dining Room' },
+            { value: 'Home Office', label: 'Home Office' },
+            { value: 'Full Bathroom', label: 'Full Bathroom' },
+            { value: 'Game Room', label: 'Game Room' },
+            { value: 'Walk-in Closet', label: 'Walk-in Closet' },
+            { value: 'Content Creator Room', label: 'Content Creator Room' },
+            { value: 'Pet Room', label: 'Pet Room' },
+        ];
 
-        const ROOM_USAGE_OPTIONS = {
-          'Living Room': [
-            { value: 'Watching TV – wall mounted tv, media console, sofa', label: 'Watching TV – wall mounted tv, media console, sofa' },
-            { value: 'Casual conversation – sofa, pair of accent chairs, coffee table', label: 'Casual conversation – sofa, pair of accent chairs, coffee table' },
-            { value: 'Hosting guests – sectional sofa, side tables, area rug', label: 'Hosting guests – sectional sofa, side tables, area rug' },
-            { value: 'Reading – armchair, floor lamp, side table', label: 'Reading – armchair, floor lamp, side table' },
-            { value: 'Listening to music – stereo cabinet, bookshelf speakers, acoustic wall panels', label: 'Listening to music – stereo cabinet, bookshelf speakers, acoustic wall panels' },
-            { value: 'Playing board games – game table, four chairs, pendant light', label: 'Playing board games – game table, four chairs, pendant light' },
-            { value: 'Kids\' playtime – play rug, toy storage bench, open shelving', label: 'Kids\' playtime – play rug, toy storage bench, open shelving' },
-            { value: 'Napping – daybed, blackout curtains, wall sconce', label: 'Napping – daybed, blackout curtains, wall sconce' },
-            { value: 'Holiday gatherings – nesting coffee tables, stackable stools, serving console', label: 'Holiday gatherings – nesting coffee tables, stackable stools, serving console' },
-            { value: 'Video calls – compact task desk, key light, backdrop panel', label: 'Video calls – compact task desk, key light, backdrop panel' },
-          ],
-          'Primary Bedroom': [
-            { value: 'Sleeping – bed frame with headboard, mattress, nightstands', label: 'Sleeping – bed frame with headboard, mattress, nightstands' },
-            { value: 'Dressing – six drawer dresser, wall mirror, bench', label: 'Dressing – six drawer dresser, wall mirror, bench' },
-            { value: 'Storing clothes – closet system, adjustable shelving, drawer tower', label: 'Storing clothes – closet system, adjustable shelving, drawer tower' },
-            { value: 'Reading in bed – swing arm sconces, upholstered headboard, bedside shelf', label: 'Reading in bed – swing arm sconces, upholstered headboard, bedside shelf' },
-            { value: 'Watching TV in bed – wall mounted tv, low media dresser, cable channel cover', label: 'Watching TV in bed – wall mounted tv, low media dresser, cable channel cover' },
-            { value: 'Intimacy – dimmable bedside lamps, layered drapery, plush area rug', label: 'Intimacy – dimmable bedside lamps, layered drapery, plush area rug' },
-            { value: 'Meditation – floor cushion, accent lamp, small side table', label: 'Meditation – floor cushion, accent lamp, small side table' },
-            { value: 'Stretching – mirror wall, storage bench, area rug', label: 'Stretching – mirror wall, storage bench, area rug' },
-            { value: 'Applying makeup – vanity table, lighted mirror, vanity stool', label: 'Applying makeup – vanity table, lighted mirror, vanity stool' },
-            { value: 'Storing valuables – visible safe cabinet, lockable drawer chest, wall niche door', label: 'Storing valuables – visible safe cabinet, lockable drawer chest, wall niche door' },
-          ],
-          'Kitchen': [
-            { value: 'Cooking – range, vent hood, tiled backsplash', label: 'Cooking – range, vent hood, tiled backsplash' },
-            { value: 'Food preparation – island countertop, butcher block board, under cabinet lighting', label: 'Food preparation – island countertop, butcher block board, under cabinet lighting' },
-            { value: 'Baking – wall oven, baking sheet storage cabinet, stand mixer', label: 'Baking – wall oven, baking sheet storage cabinet, stand mixer' },
-            { value: 'Cold food storage – refrigerator, landing counter, tall pullout pantry', label: 'Cold food storage – refrigerator, landing counter, tall pullout pantry' },
-            { value: 'Storing dry goods – pantry cabinet, adjustable shelving, canister set', label: 'Storing dry goods – pantry cabinet, adjustable shelving, canister set' },
-            { value: 'Dishwashing – dishwasher, under-mount sink, pull down faucet', label: 'Dishwashing – dishwasher, under-mount sink, pull down faucet' },
-            { value: 'Brewing coffee – coffee maker, dedicated counter station, upper shelf', label: 'Brewing coffee – coffee maker, dedicated counter station, upper shelf' },
-            { value: 'Eating quick meals – island overhang, counter stools, pendant lights', label: 'Eating quick meals – island overhang, counter stools, pendant lights' },
-            { value: 'Packing lunches – container drawer organizer, countertop packing zone, upper cabinet bin', label: 'Packing lunches – container drawer organizer, countertop packing zone, upper cabinet bin' },
-            { value: 'Recycling disposal – pullout recycle bin cabinet, matching base cabinet front', label: 'Recycling disposal – pullout recycle bin cabinet, matching base cabinet front' },
-          ],
-          'Dining Room': [
-            { value: 'Sit down meals – dining table, dining chairs, chandelier', label: 'Sit down meals – dining table, dining chairs, chandelier' },
-            { value: 'Formal dinners – upholstered dining chairs, dimmable chandelier, sideboard', label: 'Formal dinners – upholstered dining chairs, dimmable chandelier, sideboard' },
-            { value: 'Hosting dinner parties – extendable dining table, stackable chairs, sideboard staging surface', label: 'Hosting dinner parties – extendable dining table, stackable chairs, sideboard staging surface' },
-            { value: 'Homework – table task lamp, rolling storage cart, chair cushion', label: 'Homework – table task lamp, rolling storage cart, chair cushion' },
-            { value: 'Arts and crafts – utility task lamp, rolling storage cart, wipeable table cover', label: 'Arts and crafts – utility task lamp, rolling storage cart, wipeable table cover' },
-            { value: 'Puzzle building – puzzle board, adjustable table lamp, storage cabinet', label: 'Puzzle building – puzzle board, adjustable table lamp, storage cabinet' },
-            { value: 'Gift wrapping – wrapping cart, ribbon rail, under table bin', label: 'Gift wrapping – wrapping cart, ribbon rail, under table bin' },
-            { value: 'Buffet serving – sideboard, serving shelf, warming lamp look fixture', label: 'Buffet serving – sideboard, serving shelf, warming lamp look fixture' },
-            { value: 'Playing board games – square game table, four chairs, pendant light', label: 'Playing board games – square game table, four chairs, pendant light' },
-            { value: 'Paperwork sorting – lateral file credenza, tiered tray, table lamp', label: 'Paperwork sorting – lateral file credenza, tiered tray, table lamp' },
-          ],
-          'Full Bathroom': [
-            { value: 'Showering – glass shower enclosure, wall niche, shower set', label: 'Showering – glass shower enclosure, wall niche, shower set' },
-            { value: 'Bathing – freestanding tub, tub caddy, bath pillow', label: 'Bathing – freestanding tub, tub caddy, bath pillow' },
-            { value: 'Using the toilet – toilet, toilet roll holder, small wall shelf', label: 'Using the toilet – toilet, toilet roll holder, small wall shelf' },
-            { value: 'Brushing teeth – vanity sink, backlit mirror, countertop organizer', label: 'Brushing teeth – vanity sink, backlit mirror, countertop organizer' },
-            { value: 'Handwashing – pedestal sink, soap dispenser, towel ring', label: 'Handwashing – pedestal sink, soap dispenser, towel ring' },
-            { value: 'Shaving – magnifying mirror, razor stand, toiletries shelf', label: 'Shaving – magnifying mirror, razor stand, toiletries shelf' },
-            { value: 'Applying makeup – lighted mirror, vanity stool, makeup caddy', label: 'Applying makeup – lighted mirror, vanity stool, makeup caddy' },
-            { value: 'Hair drying – countertop dryer stand, heat resistant mat, outlet grommet', label: 'Hair drying – countertop dryer stand, heat resistant mat, outlet grommet' },
-            { value: 'Medicine storage – lockable medicine cabinet, interior organizer bins, label strip', label: 'Medicine storage – lockable medicine cabinet, interior organizer bins, label strip' },
-            { value: 'First aid care – first aid box, shallow wall shelf, labeled bin', label: 'First aid care – first aid box, shallow wall shelf, labeled bin' },
-          ],
-          'Home Office': [
-            { value: 'Computer work – desk, ergonomic chair, monitor arm', label: 'Computer work – desk, ergonomic chair, monitor arm' },
-            { value: 'Video conferencing – webcam on monitor, key light, backdrop panel', label: 'Video conferencing – webcam on monitor, key light, backdrop panel' },
-            { value: 'Phone calls – handset dock, privacy panel, side table', label: 'Phone calls – handset dock, privacy panel, side table' },
-            { value: 'Filing paperwork – lateral file cabinet, file rails, label tabs', label: 'Filing paperwork – lateral file cabinet, file rails, label tabs' },
-            { value: 'Printing – printer shelf, paper drawer, cord cover', label: 'Printing – printer shelf, paper drawer, cord cover' },
-            { value: 'Scanning – document scanner shelf, output tray, cable cover', label: 'Scanning – document scanner shelf, output tray, cable cover' },
-            { value: 'Paying bills – desk blotter, mail sorter, lockable drawer', label: 'Paying bills – desk blotter, mail sorter, lockable drawer' },
-            { value: 'Note taking – notebook stand, pen cup, task lamp', label: 'Note taking – notebook stand, pen cup, task lamp' },
-            { value: 'Whiteboard planning – wall mounted whiteboard, marker tray, calendar strip', label: 'Whiteboard planning – wall mounted whiteboard, marker tray, calendar strip' },
-            { value: 'Charging devices – desktop charging hub, cable tray, desk grommet', label: 'Charging devices – desktop charging hub, cable tray, desk grommet' },
-          ],
-          'Game Room': [
-            { value: 'Video gaming – large tv, media console, gaming sofa', label: 'Video gaming – large tv, media console, gaming sofa' },
-            { value: 'Billiards – pool table, cue rack, over table light', label: 'Billiards – pool table, cue rack, over table light' },
-            { value: 'Table tennis – ping pong table, paddle rack, overhead light', label: 'Table tennis – ping pong table, paddle rack, overhead light' },
-            { value: 'Foosball – foosball table, wall scoreboard, floor rug', label: 'Foosball – foosball table, wall scoreboard, floor rug' },
-            { value: 'Air hockey – air hockey table, puck holder, ceiling light', label: 'Air hockey – air hockey table, puck holder, ceiling light' },
-            { value: 'Darts – dartboard with surround, toe line marker, scoreboard panel', label: 'Darts – dartboard with surround, toe line marker, scoreboard panel' },
-            { value: 'Board games – game table, four chairs, storage credenza', label: 'Board games – game table, four chairs, storage credenza' },
-            { value: 'Card games – felt card table, four chairs, chip rack', label: 'Card games – felt card table, four chairs, chip rack' },
-            { value: 'Arcade gaming – arcade cabinet, poster lightbox, floor mat', label: 'Arcade gaming – arcade cabinet, poster lightbox, floor mat' },
-            { value: 'Pinball – pinball machine, art lightbox, power strip channel', label: 'Pinball – pinball machine, art lightbox, power strip channel' },
-          ],
-          'Walk-in Closet': [
-            { value: 'Hanging clothes storage – double hanging rods, upper shelf, hanger set', label: 'Hanging clothes storage – double hanging rods, upper shelf, hanger set' },
-            { value: 'Shoe storage – shoe towers, angled shelves, toe stops', label: 'Shoe storage – shoe towers, angled shelves, toe stops' },
-            { value: 'Accessory storage – drawer unit, compartment dividers, shallow trays', label: 'Accessory storage – drawer unit, compartment dividers, shallow trays' },
-            { value: 'Dressing – mirror wall, bench, area rug', label: 'Dressing – mirror wall, bench, area rug' },
-            { value: 'Outfit planning – valet rod, outfit rail, accessories shelf', label: 'Outfit planning – valet rod, outfit rail, accessories shelf' },
-            { value: 'Jewelry storage – jewelry drawer inserts, glass lid, lock', label: 'Jewelry storage – jewelry drawer inserts, glass lid, lock' },
-            { value: 'Suitcase storage – overhead shelves, labeled bins, luggage stand', label: 'Suitcase storage – overhead shelves, labeled bins, luggage stand' },
-            { value: 'Rotating seasonal clothing – high hanging rod lift, tote bins, label rail', label: 'Rotating seasonal clothing – high hanging rod lift, tote bins, label rail' },
-            { value: 'Laundry hamper staging – pullout hamper, divider baskets, floor mat', label: 'Laundry hamper staging – pullout hamper, divider baskets, floor mat' },
-            { value: 'Storing valuables in a safe – visible safe cabinet, keypad front, wall niche', label: 'Storing valuables in a safe – visible safe cabinet, keypad front, wall niche' },
-          ],
-          'Content Creator Room': [
-            { value: 'Video filming – camera on tripod, key light, backdrop stand', label: 'Video filming – camera on tripod, key light, backdrop stand' },
-            { value: 'Livestreaming – camera, key light, streaming desk with arm mounts', label: 'Livestreaming – camera, key light, streaming desk with arm mounts' },
-            { value: 'Podcast recording – microphone boom arm, audio interface, acoustic wall panels', label: 'Podcast recording – microphone boom arm, audio interface, acoustic wall panels' },
-            { value: 'Voiceover recording – vocal shield, microphone stand, monitor arm', label: 'Voiceover recording – vocal shield, microphone stand, monitor arm' },
-            { value: 'Video editing – editing desk, dual monitors on arms, ergonomic chair', label: 'Video editing – editing desk, dual monitors on arms, ergonomic chair' },
-            { value: 'Product photography – lightbox, pair of softboxes, backdrop stand', label: 'Product photography – lightbox, pair of softboxes, backdrop stand' },
-            { value: 'Photo editing – calibrated monitor, desk mat, storage drive dock', label: 'Photo editing – calibrated monitor, desk mat, storage drive dock' },
-            { value: 'Green screen shooting – collapsible green screen, support stand, floor tape', label: 'Green screen shooting – collapsible green screen, support stand, floor tape' },
-            { value: 'Makeup application – vanity mirror lights, stool, organizer caddy', label: 'Makeup application – vanity mirror lights, stool, organizer caddy' },
-            { value: 'Prop storage – shelving units, labeled storage bins, pegboard wall', label: 'Prop storage – shelving units, labeled storage bins, pegboard wall' },
-          ],
-          'Pet Room': [
-            { value: 'Feeding pets – raised bowls, feeding mat, scoop hook', label: 'Feeding pets – raised bowls, feeding mat, scoop hook' },
-            { value: 'Sleeping on a pet bed – orthopedic pet bed, washable cover, toy basket', label: 'Sleeping on a pet bed – orthopedic pet bed, washable cover, toy basket' },
-            { value: 'Litter box use – enclosed litter cabinet, litter mat, deodorizer canister', label: 'Litter box use – enclosed litter cabinet, litter mat, deodorizer canister' },
-            { value: 'Potty pad training – pad tray, wipeable floor mat, wall hook rail', label: 'Potty pad training – pad tray, wipeable floor mat, wall hook rail' },
-            { value: 'Grooming – grooming table, tool rack, overhead task light', label: 'Grooming – grooming table, tool rack, overhead task light' },
-            { value: 'Pet bathing – dog wash tub, handheld sprayer, drying shelf', label: 'Pet bathing – dog wash tub, handheld sprayer, drying shelf' },
-            { value: 'Playtime – play mat, toy bin, wall shelf for toys', label: 'Playtime – play mat, toy bin, wall shelf for toys' },
-            { value: 'Obedience training – floor markers, treat pouch hook, training stool', label: 'Obedience training – floor markers, treat pouch hook, training stool' },
-            { value: 'Storing pet supplies – storage cabinet, labeled bins, shelf risers', label: 'Storing pet supplies – storage cabinet, labeled bins, shelf risers' },
-            { value: 'Temporary isolation – crate, crate cover, storage shelf', label: 'Temporary isolation – crate, crate cover, storage shelf' },
-          ],
-        };
+        const ROOM_USAGE_OPTIONS = {
+          'Living Room': [
+            { value: 'Watching TV – wall mounted tv, media console, sofa', label: 'Watching TV – wall mounted tv, media console, sofa' },
+            { value: 'Casual conversation – sofa, pair of accent chairs, coffee table', label: 'Casual conversation – sofa, pair of accent chairs, coffee table' },
+            { value: 'Hosting guests – sectional sofa, side tables, area rug', label: 'Hosting guests – sectional sofa, side tables, area rug' },
+            { value: 'Reading – armchair, floor lamp, side table', label: 'Reading – armchair, floor lamp, side table' },
+            { value: 'Listening to music – stereo cabinet, bookshelf speakers, acoustic wall panels', label: 'Listening to music – stereo cabinet, bookshelf speakers, acoustic wall panels' },
+            { value: 'Playing board games – game table, four chairs, pendant light', label: 'Playing board games – game table, four chairs, pendant light' },
+            { value: 'Kids\' playtime – play rug, toy storage bench, open shelving', label: 'Kids\' playtime – play rug, toy storage bench, open shelving' },
+            { value: 'Napping – daybed, blackout curtains, wall sconce', label: 'Napping – daybed, blackout curtains, wall sconce' },
+            { value: 'Holiday gatherings – nesting coffee tables, stackable stools, serving console', label: 'Holiday gatherings – nesting coffee tables, stackable stools, serving console' },
+            { value: 'Video calls – compact task desk, key light, backdrop panel', label: 'Video calls – compact task desk, key light, backdrop panel' },
+          ],
+          'Primary Bedroom': [
+            { value: 'Sleeping – bed frame with headboard, mattress, nightstands', label: 'Sleeping – bed frame with headboard, mattress, nightstands' },
+            { value: 'Dressing – six drawer dresser, wall mirror, bench', label: 'Dressing – six drawer dresser, wall mirror, bench' },
+            { value: 'Storing clothes – closet system, adjustable shelving, drawer tower', label: 'Storing clothes – closet system, adjustable shelving, drawer tower' },
+            { value: 'Reading in bed – swing arm sconces, upholstered headboard, bedside shelf', label: 'Reading in bed – swing arm sconces, upholstered headboard, bedside shelf' },
+            { value: 'Watching TV in bed – wall mounted tv, low media dresser, cable channel cover', label: 'Watching TV in bed – wall mounted tv, low media dresser, cable channel cover' },
+            { value: 'Intimacy – dimmable bedside lamps, layered drapery, plush area rug', label: 'Intimacy – dimmable bedside lamps, layered drapery, plush area rug' },
+            { value: 'Meditation – floor cushion, accent lamp, small side table', label: 'Meditation – floor cushion, accent lamp, small side table' },
+            { value: 'Stretching – mirror wall, storage bench, area rug', label: 'Stretching – mirror wall, storage bench, area rug' },
+            { value: 'Applying makeup – vanity table, lighted mirror, vanity stool', label: 'Applying makeup – vanity table, lighted mirror, vanity stool' },
+            { value: 'Storing valuables – visible safe cabinet, lockable drawer chest, wall niche door', label: 'Storing valuables – visible safe cabinet, lockable drawer chest, wall niche door' },
+          ],
+          'Kitchen': [
+            { value: 'Cooking – range, vent hood, tiled backsplash', label: 'Cooking – range, vent hood, tiled backsplash' },
+            { value: 'Food preparation – island countertop, butcher block board, under cabinet lighting', label: 'Food preparation – island countertop, butcher block board, under cabinet lighting' },
+            { value: 'Baking – wall oven, baking sheet storage cabinet, stand mixer', label: 'Baking – wall oven, baking sheet storage cabinet, stand mixer' },
+            { value: 'Cold food storage – refrigerator, landing counter, tall pullout pantry', label: 'Cold food storage – refrigerator, landing counter, tall pullout pantry' },
+            { value: 'Storing dry goods – pantry cabinet, adjustable shelving, canister set', label: 'Storing dry goods – pantry cabinet, adjustable shelving, canister set' },
+            { value: 'Dishwashing – dishwasher, under-mount sink, pull down faucet', label: 'Dishwashing – dishwasher, under-mount sink, pull down faucet' },
+            { value: 'Brewing coffee – coffee maker, dedicated counter station, upper shelf', label: 'Brewing coffee – coffee maker, dedicated counter station, upper shelf' },
+            { value: 'Eating quick meals – island overhang, counter stools, pendant lights', label: 'Eating quick meals – island overhang, counter stools, pendant lights' },
+            { value: 'Packing lunches – container drawer organizer, countertop packing zone, upper cabinet bin', label: 'Packing lunches – container drawer organizer, countertop packing zone, upper cabinet bin' },
+            { value: 'Recycling disposal – pullout recycle bin cabinet, matching base cabinet front', label: 'Recycling disposal – pullout recycle bin cabinet, matching base cabinet front' },
+          ],
+          'Dining Room': [
+            { value: 'Sit down meals – dining table, dining chairs, chandelier', label: 'Sit down meals – dining table, dining chairs, chandelier' },
+            { value: 'Formal dinners – upholstered dining chairs, dimmable chandelier, sideboard', label: 'Formal dinners – upholstered dining chairs, dimmable chandelier, sideboard' },
+            { value: 'Hosting dinner parties – extendable dining table, stackable chairs, sideboard staging surface', label: 'Hosting dinner parties – extendable dining table, stackable chairs, sideboard staging surface' },
+            { value: 'Homework – table task lamp, rolling storage cart, chair cushion', label: 'Homework – table task lamp, rolling storage cart, chair cushion' },
+            { value: 'Arts and crafts – utility task lamp, rolling storage cart, wipeable table cover', label: 'Arts and crafts – utility task lamp, rolling storage cart, wipeable table cover' },
+            { value: 'Puzzle building – puzzle board, adjustable table lamp, storage cabinet', label: 'Puzzle building – puzzle board, adjustable table lamp, storage cabinet' },
+            { value: 'Gift wrapping – wrapping cart, ribbon rail, under table bin', label: 'Gift wrapping – wrapping cart, ribbon rail, under table bin' },
+            { value: 'Buffet serving – sideboard, serving shelf, warming lamp look fixture', label: 'Buffet serving – sideboard, serving shelf, warming lamp look fixture' },
+            { value: 'Playing board games – square game table, four chairs, pendant light', label: 'Playing board games – square game table, four chairs, pendant light' },
+            { value: 'Paperwork sorting – lateral file credenza, tiered tray, table lamp', label: 'Paperwork sorting – lateral file credenza, tiered tray, table lamp' },
+          ],
+          'Full Bathroom': [
+            { value: 'Showering – glass shower enclosure, wall niche, shower set', label: 'Showering – glass shower enclosure, wall niche, shower set' },
+            { value: 'Bathing – freestanding tub, tub caddy, bath pillow', label: 'Bathing – freestanding tub, tub caddy, bath pillow' },
+            { value: 'Using the toilet – toilet, toilet roll holder, small wall shelf', label: 'Using the toilet – toilet, toilet roll holder, small wall shelf' },
+            { value: 'Brushing teeth – vanity sink, backlit mirror, countertop organizer', label: 'Brushing teeth – vanity sink, backlit mirror, countertop organizer' },
+            { value: 'Handwashing – pedestal sink, soap dispenser, towel ring', label: 'Handwashing – pedestal sink, soap dispenser, towel ring' },
+            { value: 'Shaving – magnifying mirror, razor stand, toiletries shelf', label: 'Shaving – magnifying mirror, razor stand, toiletries shelf' },
+            { value: 'Applying makeup – lighted mirror, vanity stool, makeup caddy', label: 'Applying makeup – lighted mirror, vanity stool, makeup caddy' },
+            { value: 'Hair drying – countertop dryer stand, heat resistant mat, outlet grommet', label: 'Hair drying – countertop dryer stand, heat resistant mat, outlet grommet' },
+            { value: 'Medicine storage – lockable medicine cabinet, interior organizer bins, label strip', label: 'Medicine storage – lockable medicine cabinet, interior organizer bins, label strip' },
+            { value: 'First aid care – first aid box, shallow wall shelf, labeled bin', label: 'First aid care – first aid box, shallow wall shelf, labeled bin' },
+          ],
+          'Home Office': [
+            { value: 'Computer work – desk, ergonomic chair, monitor arm', label: 'Computer work – desk, ergonomic chair, monitor arm' },
+            { value: 'Video conferencing – webcam on monitor, key light, backdrop panel', label: 'Video conferencing – webcam on monitor, key light, backdrop panel' },
+            { value: 'Phone calls – handset dock, privacy panel, side table', label: 'Phone calls – handset dock, privacy panel, side table' },
+            { value: 'Filing paperwork – lateral file cabinet, file rails, label tabs', label: 'Filing paperwork – lateral file cabinet, file rails, label tabs' },
+            { value: 'Printing – printer shelf, paper drawer, cord cover', label: 'Printing – printer shelf, paper drawer, cord cover' },
+            { value: 'Scanning – document scanner shelf, output tray, cable cover', label: 'Scanning – document scanner shelf, output tray, cable cover' },
+            { value: 'Paying bills – desk blotter, mail sorter, lockable drawer', label: 'Paying bills – desk blotter, mail sorter, lockable drawer' },
+            { value: 'Note taking – notebook stand, pen cup, task lamp', label: 'Note taking – notebook stand, pen cup, task lamp' },
+            { value: 'Whiteboard planning – wall mounted whiteboard, marker tray, calendar strip', label: 'Whiteboard planning – wall mounted whiteboard, marker tray, calendar strip' },
+            { value: 'Charging devices – desktop charging hub, cable tray, desk grommet', label: 'Charging devices – desktop charging hub, cable tray, desk grommet' },
+          ],
+          'Game Room': [
+            { value: 'Video gaming – large tv, media console, gaming sofa', label: 'Video gaming – large tv, media console, gaming sofa' },
+            { value: 'Billiards – pool table, cue rack, over table light', label: 'Billiards – pool table, cue rack, over table light' },
+            { value: 'Table tennis – ping pong table, paddle rack, overhead light', label: 'Table tennis – ping pong table, paddle rack, overhead light' },
+            { value: 'Foosball – foosball table, wall scoreboard, floor rug', label: 'Foosball – foosball table, wall scoreboard, floor rug' },
+            { value: 'Air hockey – air hockey table, puck holder, ceiling light', label: 'Air hockey – air hockey table, puck holder, ceiling light' },
+            { value: 'Darts – dartboard with surround, toe line marker, scoreboard panel', label: 'Darts – dartboard with surround, toe line marker, scoreboard panel' },
+            { value: 'Board games – game table, four chairs, storage credenza', label: 'Board games – game table, four chairs, storage credenza' },
+            { value: 'Card games – felt card table, four chairs, chip rack', label: 'Card games – felt card table, four chairs, chip rack' },
+            { value: 'Arcade gaming – arcade cabinet, poster lightbox, floor mat', label: 'Arcade gaming – arcade cabinet, poster lightbox, floor mat' },
+            { value: 'Pinball – pinball machine, art lightbox, power strip channel', label: 'Pinball – pinball machine, art lightbox, power strip channel' },
+          ],
+          'Walk-in Closet': [
+            { value: 'Hanging clothes storage – double hanging rods, upper shelf, hanger set', label: 'Hanging clothes storage – double hanging rods, upper shelf, hanger set' },
+            { value: 'Shoe storage – shoe towers, angled shelves, toe stops', label: 'Shoe storage – shoe towers, angled shelves, toe stops' },
+            { value: 'Accessory storage – drawer unit, compartment dividers, shallow trays', label: 'Accessory storage – drawer unit, compartment dividers, shallow trays' },
+            { value: 'Dressing – mirror wall, bench, area rug', label: 'Dressing – mirror wall, bench, area rug' },
+            { value: 'Outfit planning – valet rod, outfit rail, accessories shelf', label: 'Outfit planning – valet rod, outfit rail, accessories shelf' },
+            { value: 'Jewelry storage – jewelry drawer inserts, glass lid, lock', label: 'Jewelry storage – jewelry drawer inserts, glass lid, lock' },
+            { value: 'Suitcase storage – overhead shelves, labeled bins, luggage stand', label: 'Suitcase storage – overhead shelves, labeled bins, luggage stand' },
+            { value: 'Rotating seasonal clothing – high hanging rod lift, tote bins, label rail', label: 'Rotating seasonal clothing – high hanging rod lift, tote bins, label rail' },
+            { value: 'Laundry hamper staging – pullout hamper, divider baskets, floor mat', label: 'Laundry hamper staging – pullout hamper, divider baskets, floor mat' },
+            { value: 'Storing valuables in a safe – visible safe cabinet, keypad front, wall niche', label: 'Storing valuables in a safe – visible safe cabinet, keypad front, wall niche' },
+          ],
+          'Content Creator Room': [
+            { value: 'Video filming – camera on tripod, key light, backdrop stand', label: 'Video filming – camera on tripod, key light, backdrop stand' },
+            { value: 'Livestreaming – camera, key light, streaming desk with arm mounts', label: 'Livestreaming – camera, key light, streaming desk with arm mounts' },
+            { value: 'Podcast recording – microphone boom arm, audio interface, acoustic wall panels', label: 'Podcast recording – microphone boom arm, audio interface, acoustic wall panels' },
+            { value: 'Voiceover recording – vocal shield, microphone stand, monitor arm', label: 'Voiceover recording – vocal shield, microphone stand, monitor arm' },
+            { value: 'Video editing – editing desk, dual monitors on arms, ergonomic chair', label: 'Video editing – editing desk, dual monitors on arms, ergonomic chair' },
+            { value: 'Product photography – lightbox, pair of softboxes, backdrop stand', label: 'Product photography – lightbox, pair of softboxes, backdrop stand' },
+            { value: 'Photo editing – calibrated monitor, desk mat, storage drive dock', label: 'Photo editing – calibrated monitor, desk mat, storage drive dock' },
+            { value: 'Green screen shooting – collapsible green screen, support stand, floor tape', label: 'Green screen shooting – collapsible green screen, support stand, floor tape' },
+            { value: 'Makeup application – vanity mirror lights, stool, organizer caddy', label: 'Makeup application – vanity mirror lights, stool, organizer caddy' },
+            { value: 'Prop storage – shelving units, labeled storage bins, pegboard wall', label: 'Prop storage – shelving units, labeled storage bins, pegboard wall' },
+          ],
+          'Pet Room': [
+            { value: 'Feeding pets – raised bowls, feeding mat, scoop hook', label: 'Feeding pets – raised bowls, feeding mat, scoop hook' },
+            { value: 'Sleeping on a pet bed – orthopedic pet bed, washable cover, toy basket', label: 'Sleeping on a pet bed – orthopedic pet bed, washable cover, toy basket' },
+            { value: 'Litter box use – enclosed litter cabinet, litter mat, deodorizer canister', label: 'Litter box use – enclosed litter cabinet, litter mat, deodorizer canister' },
+            { value: 'Potty pad training – pad tray, wipeable floor mat, wall hook rail', label: 'Potty pad training – pad tray, wipeable floor mat, wall hook rail' },
+            { value: 'Grooming – grooming table, tool rack, overhead task light', label: 'Grooming – grooming table, tool rack, overhead task light' },
+            { value: 'Pet bathing – dog wash tub, handheld sprayer, drying shelf', label: 'Pet bathing – dog wash tub, handheld sprayer, drying shelf' },
+            { value: 'Playtime – play mat, toy bin, wall shelf for toys', label: 'Playtime – play mat, toy bin, wall shelf for toys' },
+            { value: 'Obedience training – floor markers, treat pouch hook, training stool', label: 'Obedience training – floor markers, treat pouch hook, training stool' },
+            { value: 'Storing pet supplies – storage cabinet, labeled bins, shelf risers', label: 'Storing pet supplies – storage cabinet, labeled bins, shelf risers' },
+            { value: 'Temporary isolation – crate, crate cover, storage shelf', label: 'Temporary isolation – crate, crate cover, storage shelf' },
+          ],
+        };
 
-        const ROOM_FEEL_OPTIONS = [
-            { value: 'Let AI Decide', label: 'Let AI Decide', description: 'AI chooses the best feel for your style.' },
-            { value: 'Relaxed', label: 'Relaxed', description: 'Easygoing, breezy, casual' },
-            { value: 'Cozy', label: 'Cozy', description: 'Snug, warm, comforting' },
-            { value: 'Bright', label: 'Bright', description: 'Light-filled, fresh, uplifting' },
-            { value: 'Elegant', label: 'Elegant', description: 'Graceful, polished, refined' },
-            { value: 'Bold', label: 'Bold', description: 'Strong, dramatic, attention-grabbing' },
-            { value: 'Playful', label: 'Playful', description: 'Youthful, creative, fun' },
-            { value: 'Minimal', label: 'Minimal', description: 'Simple, uncluttered, clean' },
-            { value: 'Natural', label: 'Natural', description: 'Earthy, grounded, organic' },
-            { value: 'Moody', label: 'Moody', description: 'Dark, intimate, dramatic' },
-            { value: 'Classic', label: 'Classic', description: 'Timeless, structured, traditional' },
-        ];
+        const ROOM_FEEL_OPTIONS = [
+            { value: 'Let AI Decide', label: 'Let AI Decide', description: 'AI chooses the best feel for your style.' },
+            { value: 'Relaxed', label: 'Relaxed', description: 'Easygoing, breezy, casual' },
+            { value: 'Cozy', label: 'Cozy', description: 'Snug, warm, comforting' },
+            { value: 'Bright', label: 'Bright', description: 'Light-filled, fresh, uplifting' },
+            { value: 'Elegant', label: 'Elegant', description: 'Graceful, polished, refined' },
+            { value: 'Bold', label: 'Bold', description: 'Strong, dramatic, attention-grabbing' },
+            { value: 'Playful', label: 'Playful', description: 'Youthful, creative, fun' },
+            { value: 'Minimal', label: 'Minimal', description: 'Simple, uncluttered, clean' },
+            { value: 'Natural', label: 'Natural', description: 'Earthy, grounded, organic' },
+            { value: 'Moody', label: 'Moody', description: 'Dark, intimate, dramatic' },
+            { value: 'Classic', label: 'Classic', description: 'Timeless, structured, traditional' },
+        ];
 
-        const ROOM_STYLE_OPTIONS = [
-            { value: 'Modern', label: 'Modern' },
-            { value: 'Transitional', label: 'Transitional' },
-            { value: 'Contemporary', label: 'Contemporary' },
-            { value: 'Scandinavian', label: 'Scandinavian' },
-            { value: 'Moroccan', label: 'Moroccan' },
-            { value: 'Industrial', label: 'Industrial' },
-            { value: 'Mid-Century Modern', label: 'Mid-Century Modern' },
-            { value: 'Coastal', label: 'Coastal' },
-            { value: 'Japandi', label: 'Japandi' },
-            { value: 'Bohemian', label: 'Bohemian' },
-        ];
-        
-        // --- From services/promptLibrary.ts ---
-        const FIXED_VS_NON_FIXED_PARTS = `
+        const ROOM_STYLE_OPTIONS = [
+            { value: 'Modern', label: 'Modern' },
+            { value: 'Transitional', label: 'Transitional' },
+            { value: 'Contemporary', label: 'Contemporary' },
+            { value: 'Scandinavian', label: 'Scandinavian' },
+            { value: 'Moroccan', label: 'Moroccan' },
+            { value: 'Industrial', label: 'Industrial' },
+            { value: 'Mid-Century Modern', label: 'Mid-Century Modern' },
+            { value: 'Coastal', label: 'Coastal' },
+            { value: 'Japandi', label: 'Japandi' },
+            { value: 'Bohemian', label: 'Bohemian' },
+        ];
+        
+        // --- From services/promptLibrary.ts ---
+        const FIXED_VS_NON_FIXED_PARTS = `
 **1. Fixed Parts**
 - **Definition**: Core structural elements of the home. These are IMMUTABLE. Permanently attached and must not be altered, moved, or removed in the output image.
 - **Examples**:
-  - Walls (position, thickness, and any openings are immutable)
-  - Windows & window frames (size, position, shape, and muntin/grille pattern are immutable)
-  - Doors & door frames (size, position, shape, and panel design are immutable)
-  - Structural ceiling slab (height and shape are immutable. Beams are part of the structure and must not be changed.)
-  - Staircases (steps, railing, balustrades)
-  - Fireplace (core masonry/firebox)
-  - Kitchen islands / peninsulas (structural base with plumbing/electrical)
-  - Kitchen sink basin (built-in)
-  - Bathroom fittings (toilet, bathtub, fixed sink basins, shower enclosures)
-  - Utility sink / laundry basin
-  - Structural pillars & beams
-  - In-built niches (alcoves, wall recesses)
-  - Built-in carcasses (wardrobes, cabinetry shells)
-  - Balconies & terraces (structural slab & railing base)
+  - Walls (position, thickness, and any openings are immutable)
+  - Windows & window frames (size, position, shape, and muntin/grille pattern are immutable)
+  - Doors & door frames (size, position, shape, and panel design are immutable)
+  - Structural ceiling slab (height and shape are immutable. Beams are part of the structure and must not be changed.)
+  - Staircases (steps, railing, balustrades)
+  - Fireplace (core masonry/firebox)
+  - Kitchen islands / peninsulas (structural base with plumbing/electrical)
+  - Kitchen sink basin (built-in)
+  - Bathroom fittings (toilet, bathtub, fixed sink basins, shower enclosures)
+  - Utility sink / laundry basin
+  - Structural pillars & beams
+  - In-built niches (alcoves, wall recesses)
+  - Built-in carcasses (wardrobes, cabinetry shells)
+  - Balconies & terraces (structural slab & railing base)
 
 **2. Non-Fixed Parts**
 - **Definition**: All items, finishes, and fixtures that can be changed, upgraded, or styled during interior design projects. These are the ONLY elements you are allowed to modify.
 - **Examples**:
-  **1. Surfaces & Finishes**
-  - Flooring materials (tiles, wood planks, vinyl, carpet rolls)
-  - Wall finishes (paint, wallpaper, wall panels, cladding, realistic veneers like thin brick or board-formed concrete plaster)
-  - Ceiling finishes (paint, wallpaper, decorative panels, faux beams, acoustic panels, ceiling tiles)
-  - Kitchen & bathroom backsplashes (tiles, stone, glass, metal)
-  - Cabinet finishes (doors, shutters, laminates, veneers)
-  - Hardware (handles, knobs, pulls, locks for doors/cabinets/windows)
-  - Kitchen island cladding & countertop finishes
-  - Fireplace cladding & mantels
-  - Balcony/terrace flooring, railing finishes, wall finishes
+  **1. Surfaces & Finishes**
+  - Flooring materials (tiles, wood planks, vinyl, carpet rolls)
+  - Wall finishes (paint, wallpaper, wall panels, cladding, realistic veneers like thin brick or board-formed concrete plaster)
+  - Ceiling finishes (paint, wallpaper, decorative panels, faux beams, acoustic panels, ceiling tiles)
+  - Kitchen & bathroom backsplashes (tiles, stone, glass, metal)
+  - Cabinet finishes (doors, shutters, laminates, veneers)
+  - Hardware (handles, knobs, pulls, locks for doors/cabinets/windows)
+  - Kitchen island cladding & countertop finishes
+  - Fireplace cladding & mantels
+  - Balcony/terrace flooring, railing finishes, wall finishes
 
-  **2. Fixtures (Design-relevant)**
-  - Ceiling fans
-  - Ceiling light fixtures (chandeliers, pendants, flush mounts)
-  - Wall-mounted sconces / fixed wall lights
-  - Switchboards & sockets (styling finishes, smart switches)
-  - False ceiling frameworks (POP, gypsum boards, tray/coffered layouts)
-  - Recessed lighting (spotlights, cove lights, LED strips)
-  - Air-conditioning units (split ACs, vents, duct covers)
-  - Heaters / radiators (designer finishes)
-  - Water heaters (visible models with design impact)
-  - Projectors, retractable screens
-  - Exhaust fans (designer vent covers)
-  - Ceiling/in-wall speaker systems (design-integrated)
-  - Faucets, taps, showerheads, spouts
-  - Kitchen chimney / range hood (designer finishes)
-  - Built-in water purifiers (visible panels)
-  - Intercom systems, smart home panels
+  **2. Fixtures (Design-relevant)**
+  - Ceiling fans
+  - Ceiling light fixtures (chandeliers, pendants, flush mounts)
+  - Wall-mounted sconces / fixed wall lights
+  - Switchboards & sockets (styling finishes, smart switches)
+  - False ceiling frameworks (POP, gypsum boards, tray/coffered layouts)
+  - Recessed lighting (spotlights, cove lights, LED strips)
+  - Air-conditioning units (split ACs, vents, duct covers)
+  - Heaters / radiators (designer finishes)
+  - Water heaters (visible models with design impact)
+  - Projectors, retractable screens
+  - Exhaust fans (designer vent covers)
+  - Ceiling/in-wall speaker systems (design-integrated)
+  - Faucets, taps, showerheads, spouts
+  - Kitchen chimney / range hood (designer finishes)
+  - Built-in water purifiers (visible panels)
+  - Intercom systems, smart home panels
 
-  **3. Furniture**
-  - Beds, sofas, chairs, stools, ottomans
-  - Dining tables, coffee tables, side tables, consoles
-  - TV stands, media units
-  - Freestanding wardrobes, cupboards, dressers, bookcases. IMPORTANT: If a "closet system" or "shelving system" is requested, it MUST be implemented as a series of freestanding units. You are FORBIDDEN from creating built-in wardrobes that recess into or alter the wall plane.
-  - Shelves (non-fixed)
-  - Desks & workstations
-  - Outdoor furniture (for balconies/terraces)
-  - Portable room dividers, folding screens
+  **3. Furniture**
+  - Beds, sofas, chairs, stools, ottomans
+  - Dining tables, coffee tables, side tables, consoles
+  - TV stands, media units
+  - Freestanding wardrobes, cupboards, dressers, bookcases. IMPORTANT: If a "closet system" or "shelving system" is requested, it MUST be implemented as a series of freestanding units. You are FORBIDDEN from creating built-in wardrobes that recess into or alter the wall plane.
+  - Shelves (non-fixed)
+  - Desks & workstations
+  - Outdoor furniture (for balconies/terraces)
+  - Portable room dividers, folding screens
 
-  **4. Soft Furnishings**
-  - Rugs, carpets, runners
-  - Curtains, drapes, blinds (removable)
-  - Cushions, throws, quilts, comforters
-  - Bedding (mattresses, sheets, blankets, pillows)
-  - Tablecloths, runners, placemats
+  **4. Soft Furnishings**
+  - Rugs, carpets, runners
+  - Curtains, drapes, blinds (removable)
+  - Cushions, throws, quilts, comforters
+  - Bedding (mattresses, sheets, blankets, pillows)
+  - Tablecloths, runners, placemats
 
-  **5. Decor**
-  - Wall art, paintings, posters, tapestries
-  - Mirrors (freestanding or hook-hung)
-  - Clocks
-  - Sculptures, decorative bowls, trays
-  - Candles & candle holders
-  - Vases & artificial flowers
-  - Picture frames, photo albums
-  - Seasonal décor (Diwali lamps, Christmas tree, holiday lights)
+  **5. Decor**
+  - Wall art, paintings, posters, tapestries
+  - Mirrors (freestanding or hook-hung)
+  - Clocks
+  - Sculptures, decorative bowls, trays
+  - Candles & candle holders
+  - Vases & artificial flowers
+  - Picture frames, photo albums
+  - Seasonal décor (Diwali lamps, Christmas tree, holiday lights)
 
-  **6. Lighting (Portable)**
-  - Table lamps
-  - Floor lamps
-  - String lights
-  - Portable lanterns
-  - Battery-operated lamps
+  **6. Lighting (Portable)**
+  - Table lamps
+  - Floor lamps
+  - String lights
+  - Portable lanterns
+  - Battery-operated lamps
 
-  **7. Electronics & Appliances**
-  - TVs (if not wall-mounted)
-  - Portable speakers, smart hubs (Alexa, Google Home)
-  - Laptops, tablets, chargers
-  - Small appliances (microwave, toaster, kettle, coffee machine, mixer)
-  - Portable fans & heaters
-  - Vacuum cleaners, robot vacuums
-  - Air purifiers, humidifiers, dehumidifiers
-  - Gaming consoles, projectors (if not ceiling-mounted)
-  - Portable exercise gear (treadmills, bikes, dumbbells, yoga mats)
-  - Musical instruments (piano, guitar, drums)
+  **7. Electronics & Appliances**
+  - TVs (if not wall-mounted)
+  - Portable speakers, smart hubs (Alexa, Google Home)
+  - Laptops, tablets, chargers
+  - Small appliances (microwave, toaster, kettle, coffee machine, mixer)
+  - Portable fans & heaters
+  - Vacuum cleaners, robot vacuums
+  - Air purifiers, humidifiers, dehumidifiers
+  - Gaming consoles, projectors (if not ceiling-mounted)
+  - Portable exercise gear (treadmills, bikes, dumbbells, yoga mats)
+  - Musical instruments (piano, guitar, drums)
 
-  **8. Plants & Accessories**
-  - Indoor plants in pots
-  - Planters (ceramic, plastic, terracotta, baskets)
-  - Artificial plants & flowers
-  - Water fountains (tabletop, portable)
+  **8. Plants & Accessories**
+  - Indoor plants in pots
+  - Planters (ceramic, plastic, terracotta, baskets)
+  - Artificial plants & flowers
+  - Water fountains (tabletop, portable)
 
-  **9. Miscellaneous**
-  - Storage baskets, bins, boxes
-  - Laundry hampers
-  - Shoe racks (movable)
-  - Coat racks & stands
-  - Pet furniture (beds, crates, cat trees)
-  - Kids' toys, play tents, activity tables
-  - Office accessories (desk organizers, ergonomic chairs)
+  **9. Miscellaneous**
+  - Storage baskets, bins, boxes
+  - Laundry hampers
+  - Shoe racks (movable)
+  - Coat racks & stands
+  - Pet furniture (beds, crates, cat trees)
+  - Kids' toys, play tents, activity tables
+  - Office accessories (desk organizers, ergonomic chairs)
 `;
 
-        const LIGHTING_GUIDE = `
+        const LIGHTING_GUIDE = `
 **Ground Rule**: Base lighting hue is determined by the chosen style and never changes with mood. Mood only changes the intensity, spread, and strategy of the light, not its inherent color temperature.
 
 **Intensity (Low / Medium / High)**
@@ -352,71 +352,71 @@
 - **Crisp**: Light is direct and focused, creating sharp, well-defined shadows. High contrast, highlights textures. (Think direct sunlight or a spotlight).
 `;
 
-        const MOOD_GUIDES = {
-          'Relaxed': `
+        const MOOD_GUIDES = {
+          'Relaxed': `
 - **Description**: Easygoing, breezy, casual. The feeling of a calm, lazy afternoon. Unfussy and comfortable.
 - **Lighting Strategy**: The key is **even, diffuse, ambient light**. The room should feel uniformly and comfortably lit, without dramatic hotspots or deep shadows. Simulate the gentle light of a bright but overcast day, or light filtered through large sheer curtains.
 - **Intensity**: Medium.
 - **Feel**: Soft.
 `,
-          'Cozy': `
+          'Cozy': `
 - **Description**: Snug, warm, comforting. Creates an intimate feeling of being enveloped in a safe, soft space.
 - **Lighting Strategy**: The key is creating **localized light pools** rather than high overall brightness. Emphasize task and accent lighting (e.g., table lamps, floor lamps, pendants over a table) to create glowing zones. Ambient light is present but subdued, allowing these pools of light to be the focus. This creates a high dynamic range within the scene.
 - **Intensity**: Low (ambient), with Medium intensity within the focused light pools.
 - **Feel**: Soft.
 `,
-          'Bright': `
+          'Bright': `
 - **Description**: Light-filled, fresh, uplifting. An open and airy atmosphere.
 - **Lighting Strategy**: Maximize light and minimize shadow. The goal is to flood the space with clean, clear light. This can be achieved through large, unobstructed light sources and reflective surfaces.
 - **Intensity**: High.
 - **Feel**: Neutral.
 `,
-          'Elegant': `
+          'Elegant': `
 - **Description**: Graceful, polished, refined. A sophisticated and composed atmosphere.
 - **Lighting Strategy**: Use **layered lighting** to create depth and highlight beautiful features. A base of medium ambient light is complemented by accent lights (e.g., picture lights, uplights on plants, cabinet lighting) and decorative fixtures (e.g., a beautiful chandelier or sconces).
 - **Intensity**: Medium.
 - **Feel**: Soft.
 `,
-          'Bold': `
+          'Bold': `
 - **Description**: Strong, dramatic, attention-grabbing. High energy and high impact.
 - **Lighting Strategy**: Employ **high-contrast, directional lighting**. Use spotlights, track lighting, or focused pendants to create dramatic highlights and sharp shadows. This technique, often called 'chiaroscuro', sculpts the room and draws attention to specific points.
 - **Intensity**: High.
 - **Feel**: Crisp.
 `,
-          'Playful': `
+          'Playful': `
 - **Description**: Youthful, creative, fun. An energetic and vibrant space.
 - **Lighting Strategy**: Provide **general, even illumination** that renders colors accurately and keeps the space feeling lively. The lighting itself should be unobtrusive, allowing the colorful and creative decor to be the star.
 - **Intensity**: Medium.
 - **Feel**: Neutral.
 `,
-          'Minimal': `
+          'Minimal': `
 - **Description**: Simple, uncluttered, clean. Calmness through simplicity.
 - **Lighting Strategy**: Focus on **integrated, architectural lighting**. Light sources should be clean and unobtrusive, often built into the structure (e.g., seamless recessed lights, hidden cove lighting, linear light strips). The light itself becomes a geometric element.
 - **Intensity**: Medium.
 - **Feel**: Neutral.
 `,
-          'Natural': `
+          'Natural': `
 - **Description**: Earthy, grounded, organic. A serene connection to the outdoors.
 - **Lighting Strategy**: Simulate the feeling of **natural daylight**. Use large, diffuse light sources. The light should feel like it's coming from a primary direction (like a large window), creating a single set of soft, natural-looking shadows.
 - **Intensity**: Medium.
 - **Feel**: Soft.
 `,
-          'Moody': `
+          'Moody': `
 - **Description**: Dark, intimate, dramatic. A contemplative and atmospheric space.
 - **Lighting Strategy**: This is **low-key lighting**. The scene is predominantly dark, with carefully controlled, focused light to highlight key areas. This creates a sense of mystery and intimacy, where shadows shape the space more than the light itself.
 - **Intensity**: Low.
 - **Feel**: Crisp.
 `,
-          'Classic': `
+          'Classic': `
 - **Description**: Timeless, structured, traditional. A sense of order, formality, and warmth.
 - **Lighting Strategy**: Use a **symmetrical and layered approach**. Often anchored by a central decorative fixture (like a chandelier), supplemented by pairs of wall sconces or table lamps to create a balanced, welcoming glow. The light should feel warm and inviting.
 - **Intensity**: Medium.
 - **Feel**: Soft.
 `,
-        };
+        };
 
-        const STYLE_GUIDES = {
-        'Modern': `
+        const STYLE_GUIDES = {
+        'Modern': `
 **Furniture**:
 - Low, rectilinear silhouettes with flat planes and smooth edges; ornamentation absent.
 - Sofas and chairs with tight upholstery, slim arms, and thin legs in chrome, matte black, or simple wood; skirts and tufting not present.
@@ -496,7 +496,7 @@
 - Negative space deliberate, allowing silhouettes and materials to read clearly.
 - Rugs define zones without obscuring floor edges; surfaces styled with one sculptural object or a tight stack of books for visual clarity.
 `,
-        'Transitional': `
+        'Transitional': `
 **Furniture**:
 - Tailored silhouettes that blend straight lines with softened curves; ornamentation restrained.
 - Sofas with track, slope, or gently rolled arms; tight or semi-attached backs; skirts absent; tufting shallow and orderly.
@@ -574,7 +574,7 @@
 - Rugs anchor zones with edges visible; furnishings maintain comfortable spacing for natural movement.
 - Surfaces edited and orderly: a grounded stack, a bowl, or a calm pair of objects; eclectic clustering avoided.
 `,
-        'Contemporary': `
+        'Contemporary': `
 **Furniture**:
 - Profiles blend crisp planes with softened corners; silhouettes read streamlined, current, and comfortable.
 - Sofas with slim track or gently sloped arms, tight tailoring, bench or boxed cushions; legs slender in matte black metal or light wood; tufting minimal or absent.
@@ -649,7 +649,7 @@
 - Negative space moderated rather than sparse; silhouettes and materials remain legible.
 - Rugs define zones without hiding floor edges; surfaces styled with one substantial vessel, a quiet stack of books, or a single sculpture for clarity.
 `,
-        'Scandinavian': `
+        'Scandinavian': `
 **Furniture**:
 - Silhouettes light and slender with softened corners and clean planes.
 - Sofas with straight or gently rounded arms, tight upholstery, and raised legs; skirts and deep tufting not present.
@@ -725,7 +725,7 @@
 - Groupings highlight tactile layering on streamlined forms; negative space remains quiet and deliberate.
 - Surfaces edited: one turned bowl, a matte vase, or a short stack of neutral books achieves a composed hush.
 `,
-        'Moroccan': `
+        'Moroccan': `
 **Furniture**:
 - Low seating dominates: bench-like sofas, daybeds, and floor cushions; cushions firm and tailored.
 - Poufs in leather with hand-stitched panels or embossed motifs; forms round or drum-like.
@@ -798,7 +798,7 @@
 - Repetition of arches, lattice, and star geometry creates rhythm; décor edited to generous, well-spaced vignettes.
 - Visual weight remains grounded; tall pieces limited to carved screens or simple cabinets that echo the geometry.
 `,
-        'Industrial': `
+        'Industrial': `
 **Furniture**:
 - Forms read sturdy and engineered: straight lines, block profiles, visible joinery.
 - Sofas boxy in leather or heavy canvas; colors in tobacco, saddle, charcoal, or black; tufting minimal or channel stitched.
@@ -869,7 +869,7 @@
 - Alignments favor straight runs and right angles that echo factory order; symmetry relaxed, rhythm created by repeating grids and frames.
 - Visual weight balanced by mixing metal frames with timber surfaces and low-pile rugs; surfaces edited to purposeful vignettes (tray, wire basket, blueprint stack).
 `,
-        'Mid-Century Modern': `
+        'Mid-Century Modern': `
 **Furniture**:
 - Low, streamlined silhouettes on tapered or splayed legs in walnut or teak; skirts absent.
 - Sofas with tight backs, bench or box cushions, and straight or cigar arms; tailoring crisp.
@@ -940,7 +940,7 @@
 - Negative space intentional so silhouettes, wood grains, and art forms register clearly.
 - Rugs define zones without crowding edges; surfaces styled as tidy vignettes—one sculptural object, a shallow bowl, or a small art stack.
 `,
-        'Coastal': `
+        'Coastal': `
 **Furniture**:
 - Light, airy silhouettes with softened corners and slim profiles; visual weight kept low.
 - Sofas slipcovered in linen or cotton in white, ivory, sand, or fog; skirts tailored and crisp.
@@ -1014,7 +1014,7 @@
 - Natural-fiber rugs define relaxed zones while leaving comfortable circulation around furniture.
 - Repetition of woven textures, pale woods, and blue-white textiles creates an easy rhythm; surfaces edited for calm, not clutter.
 `,
-        'Japandi': `
+        'Japandi': `
 **Furniture**:
 - Low, calm silhouettes with softly rounded edges; ornament absent.
 - Sofas with tight upholstery and bench cushions on simple wood bases; legs straight or lightly tapered in pale oak, ash, or beech.
@@ -1085,7 +1085,7 @@
 - Seating forms a low horizon with comfortable spacing; raised legs keep the floor plane open.
 - Surfaces edited—a ceramic vessel, wood tray, or a stone bowl—arranged harmoniously and without clutter.
 `,
-        'Bohemian': `
+        'Bohemian': `
 **Furniture**:
 - Collected, relaxed silhouettes mixing straight frames with easy curves; profiles feel lived-in rather than pristine.
 - Sofas in linen, cotton, or velvet with generous cushions; legs slim wood or turned posts; patina acceptable.
@@ -1158,10 +1158,10 @@
 - Layered rugs define relaxed zones while sightlines remain open; plants cluster in varied heights to soften corners.
 - Surfaces carry curated abundance—stacked books, a brass tray, a handmade vessel—kept tidy rather than cluttered.
 `,
-        };
-        
-        // --- From services/promptTemplate.ts ---
-        const PROMPT_TEMPLATE = `
+        };
+        
+        // --- From services/promptTemplate.ts ---
+        const PROMPT_TEMPLATE = `
 You are an expert AI photo editor specializing in virtual staging.
 Your task is to redecorate and furnish the given room without altering its fixed architectural features.
 
@@ -1225,717 +1225,714 @@ The lighting design is critical. It must follow these rules and evoke the specif
 ---
 ## Final Output Instructions
 
-1.  **Verify Compliance**: Before generating, double-check that you have followed every rule.
-    -   **Architecture Check**: Is the room's structure (walls, windows, doors, beams, floor, columns) 100% identical to the original image?
-    -   **Object Check**: Is every item from the mandatory checklist present?
-    -   **Layout Check**: Are all doors, windows, and walkways clear and unobstructed?
-2.  **Generate the Image**: Create a single, flawless, ultra-photorealistic image that looks like a real photograph.
-3.  **Generate the Description**: Write a brief summary of the design. Start with "Here is your new room design:". Explain how the new design fulfills the user's requirements for style, feel, and function.
+1.  **Verify Compliance**: Before generating, double-check that you have followed every rule.
+    -   **Architecture Check**: Is the room's structure (walls, windows, doors, beams, floor, columns) 100% identical to the original image?
+    -   **Object Check**: Is every item from the mandatory checklist present?
+    -   **Layout Check**: Are all doors, windows, and walkways clear and unobstructed?
+2.  **Generate the Image**: Create a single, flawless, ultra-photorealistic image that looks like a real photograph.
+3.  **Generate the Description**: Write a brief summary of the design. Start with "Here is your new room design:". Explain how the new design fulfills the user's requirements for style, feel, and function.
 `;
-        
-        // --- From services/database.ts ---
-        const HISTORY_KEY = 'ai_interior_designer_history';
-
-        const saveDesign = async (item) => {
-          try {
-            const existingHistoryString = localStorage.getItem(HISTORY_KEY);
-            const history = existingHistoryString ? JSON.parse(existingHistoryString) : [];
-            const updatedHistory = [item, ...history];
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
-          } catch (error) {
-            console.error("Failed to save design to localStorage", error);
-          }
-        };
-
-        const loadHistory = async () => {
-          try {
-            const historyString = localStorage.getItem(HISTORY_KEY);
-            if (historyString) {
-              return JSON.parse(historyString);
-            }
-            return [];
-          } catch (error) {
-            console.error("Failed to load history from localStorage", error);
-            return [];
-          }
-        };
-        
-        // --- From services/geminiService.ts ---
-        const createPrompt = (params) => {
-          const styleGuide = STYLE_GUIDES[params.roomStyle];
-          const moodGuide = params.roomFeel !== 'Let AI Decide' ? MOOD_GUIDES[params.roomFeel] : '';
-
-          const allItems = new Set();
-          const allActivities = [];
-
-          params.roomUsage.forEach(usage => {
-              const parts = usage.split('–');
-              const activity = parts[0]?.trim();
-              if (activity) {
-                  allActivities.push(activity);
-              }
-              const itemsString = parts[1]?.trim();
-              if (itemsString) {
-                  const items = itemsString.split(',').map(item => item.trim().toLowerCase());
-                  items.forEach(item => allItems.add(item));
-              }
-          });
-
-          const consolidatedItemList = Array.from(allItems).map(item => `- **${item.charAt(0).toUpperCase() + item.slice(1)}**`).join('\n');
-
-          const functionalRequirements = `
-        This room MUST be designed to accommodate the following activities: **${allActivities.join(', ')}**.
-
-        To achieve this, the final image is REQUIRED to contain the following complete and unabridged list of objects. This is not a suggestion list; it is a mandatory build sheet.
-
-        ### **Unified Object Checklist (MANDATORY)**
-        ${consolidatedItemList}
-        `;
-
-          const moodGuideDetails = params.roomFeel === 'Let AI Decide' 
-        ? `#### SPECIFIC MOOD TO CREATE: AI-Selected
-        - **Instruction**: Based on the chosen style ('${params.roomStyle}') and room type, select and apply the most appropriate mood and lighting from the lighting guide. Announce which mood you chose in your description.`
-        : `#### SPECIFIC MOOD TO CREATE: ${params.roomFeel}
-        ${moodGuide}`
-        ;
-
-          const prompt = PROMPT_TEMPLATE
-            .replace(/{{FUNCTIONAL_REQUIREMENTS}}/g, functionalRequirements)
-            .replace(/{{FIXED_VS_NON_FIXED_PARTS}}/g, FIXED_VS_NON_FIXED_PARTS)
-            .replace(/{{ROOM_STYLE}}/g, params.roomStyle)
-            .replace(/{{STYLE_GUIDE_DETAILS}}/g, styleGuide)
-            .replace(/{{ROOM_FEEL}}/g, params.roomFeel)
-            .replace(/{{LIGHTING_GUIDE}}/g, LIGHTING_GUIDE)
-            .replace(/{{MOOD_GUIDE_DETAILS}}/g, moodGuideDetails)
-            .replace(/{{SPECIAL_REQUESTS}}/g, params.specialRequests || 'None.');
-
-          return prompt;
-        };
-
-
-        const generateRoomMakeover = async (base64Image, mimeType, params) => {
-          if (!process.env.API_KEY) {
-            throw new Error("API_KEY environment variable is not set.");
-          }
-
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          const prompt = createPrompt(params);
-
-          const userImagePart = {
-            inlineData: {
-              data: base64Image,
-              mimeType: mimeType,
-            },
-          };
-
-          const parts = [userImagePart, { text: prompt }];
-
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
-            contents: {
-              parts: parts,
-            },
-            config: {
-              responseModalities: [Modality.IMAGE, Modality.TEXT],
-            },
-          });
-
-          let imageUrl = '';
-          let text = 'No description was generated.';
-
-          if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
-            for (const part of response.candidates[0].content.parts) {
-              if (part.text) {
-                text = part.text;
-              } else if (part.inlineData) {
-                const base64ImageBytes = part.inlineData.data;
-                imageUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
-              }
-            }
-          }
-
-
-          if (!imageUrl) {
-            if (text !== 'No description was generated.') {
-              throw new Error(`The API did not return an image. API response: ${text}`);
-            }
-            throw new Error("The API did not return an image. Please try again.");
-          }
-
-          return { imageUrl, text, prompt };
-        };
-
-        // --- From components/CardSelector.tsx ---
-        function CardSelector({ options, selectedValue, onChange, type, title, subtitle }) {
-          const isSelected = (value) => {
-            if (Array.isArray(selectedValue)) {
-              return selectedValue.includes(value);
-            }
-            return selectedValue === value;
-          };
-
-          return (
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-800">{title}</h2>
-              <p className="text-slate-500 mt-1 mb-4">{subtitle}</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {options.map((option) => (
-                  <div
-                    key={option.value}
-                    onClick={() => onChange(option.value)}
-                    className={`relative p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
-                      isSelected(option.value)
-                        ? 'border-blue-500 ring-2 ring-blue-500 shadow-lg'
-                        : 'border-slate-300 bg-white hover:border-blue-400 hover:shadow-md'
-                    }`}
-                  >
-                    {isSelected(option.value) && (
-                      <CheckCircleIcon className="absolute top-2 right-2 h-6 w-6 text-blue-500" />
-                    )}
-                    <h3 className="font-semibold text-slate-700">{option.label}</h3>
-                    {option.description && <p className="text-xs text-slate-500 mt-1">{option.description}</p>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        }
-
-        // --- From App.tsx ---
-        const toBase64 = (file) => new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve((reader.result).split(',')[1]);
-          reader.onerror = error => reject(error);
-        });
-
-        const Header = () => (
-          <header className="text-center py-8">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800">AI Interior Designer</h1>
-            <p className="text-lg text-slate-600 mt-2">Reimagine your space with the power of Gemini.</p>
-          </header>
-        );
-
-        const ImageUploader = ({ onImageUpload, title, subtitle }) => {
-          const [dragActive, setDragActive] = useState(false);
-
-          const handleDrag = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.type === "dragenter" || e.type === "dragover") {
-              setDragActive(true);
-            } else if (e.type === "dragleave") {
-              setDragActive(false);
-            }
-          };
-
-          const handleDrop = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragActive(false);
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-              onImageUpload(e.dataTransfer.files[0]);
-            }
-          };
-          
-          const handleChange = (e) => {
-            e.preventDefault();
-            if (e.target.files && e.target.files[0]) {
-              onImageUpload(e.target.files[0]);
-            }
-          };
-
-          return (
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-2xl font-bold text-slate-800">{title}</h2>
-              <p className="text-slate-500 mt-1 mb-4">{subtitle}</p>
-              <label
-                htmlFor="dropzone-file"
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                className={`mt-4 flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-white transition-colors duration-300 ${dragActive ? 'border-blue-500' : 'border-slate-300 hover:border-blue-400'}`}
-              >
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <UploadIcon className="w-10 h-10 mb-4 text-slate-500"/>
-                    <p className="mb-2 text-sm text-slate-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                    <p className="text-xs text-slate-500">PNG, JPG, or WEBP</p>
-                </div>
-                <input id="dropzone-file" type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handleChange} />
-              </label>
-            </div>
-          );
-        };
-
-        const GeneratingView = () => (
-            <div className="text-center">
-                <div className="flex justify-center items-center">
-                    <SparklesIcon className="w-16 h-16 text-blue-500 animate-pulse" />
-                </div>
-                <h2 className="text-3xl font-bold text-slate-800 mt-6">Generating your new room...</h2>
-                <p className="text-slate-500 mt-2">The AI is working its magic. This may take a moment.</p>
-            </div>
-        );
-
-        const DesignBrief = ({ params }) => {
-          return (
-            <div className="bg-white p-6 rounded-lg shadow-lg border border-slate-200 h-full">
-              <h3 className="text-2xl font-bold text-center text-slate-700 mb-6">Design Brief</h3>
-              
-              <div className="space-y-4 text-sm">
-                <div>
-                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Room Type</h4>
-                  <p className="text-slate-800 text-base">{params.roomType}</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Room Usage</h4>
-                  <ul className="space-y-2 mt-1">
-                    {params.roomUsage.map(usage => {
-                      const parts = usage.split('–');
-                      const activity = parts[0]?.trim();
-                      const itemsStr = parts[1]?.trim();
-                      const items = itemsStr ? itemsStr.split(',').map(item => item.trim()) : [];
-                      return (
-                        <li key={usage}>
-                          <p className="font-bold text-slate-700">{activity}</p>
-                          {items.length > 0 && (
-                            <ul className="list-disc list-inside pl-2 text-slate-600">
-                              {items.map(item => <li key={item}>{item.charAt(0).toUpperCase() + item.slice(1)}</li>)}
-                            </ul>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Room Feel</h4>
-                  <p className="text-slate-800 text-base">{params.roomFeel}</p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Design Style</h4>
-                  <p className="text-slate-800 text-base">{params.roomStyle}</p>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        const ResultView = ({ original, generated, description, prompt, designParams, onStartOver, refinementPrompt, onRefinementChange, onRefine }) => {
-            
-            const handleDownload = () => {
-                const link = document.createElement('a');
-                link.href = generated;
-                const fileExtension = generated.split(';')[0].split('/')[1] || 'png';
-                link.download = `ai-room-makeover.${fileExtension}`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
-
-            return (
-            <div className="w-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
-                    <div className="lg:col-span-1">
-                        <h3 className="text-2xl font-bold text-center text-slate-700 mb-4">Before</h3>
-                        <img src={original} alt="Original room" className="rounded-lg shadow-xl w-full" />
-                    </div>
-                    
-                    <div className="hidden lg:block lg:col-span-1">
-                        <DesignBrief params={designParams} />
-                    </div>
-
-                    <div className="lg:col-span-1">
-                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-2xl font-bold text-slate-700">After</h3>
-                            <button 
-                                onClick={handleDownload} 
-                                className="flex items-center px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors"
-                                aria-label="Download generated image"
-                            >
-                                <DownloadIcon className="w-5 h-5 mr-2"/>
-                                Download
-                            </button>
-                        </div>
-                        <img src={generated} alt="AI generated room" className="rounded-lg shadow-xl w-full" />
-                    </div>
-                </div>
-                
-                <div className="block lg:hidden mt-8">
-                    <DesignBrief params={designParams} />
-                </div>
-
-                <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-                    <h4 className="text-xl font-semibold text-slate-800">AI Design Notes</h4>
-                    <p className="text-slate-600 mt-2">{description}</p>
-                </div>
-
-                <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-                    <h4 className="text-xl font-semibold text-slate-800">Make a Change</h4>
-                    <p className="text-slate-600 mt-1 mb-4">Not quite right? Tell the AI what to adjust.</p>
-                    <textarea
-                      value={refinementPrompt}
-                      onChange={(e) => onRefinementChange(e.target.value)}
-                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                      rows={2}
-                      placeholder="e.g., 'Make the sofa blue' or 'Add a bigger rug'"
-                    />
-                    <button 
-                        onClick={onRefine}
-                        disabled={!refinementPrompt.trim()}
-                        className="mt-4 w-full px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                        <SparklesIcon className="w-5 h-5 mr-2" />
-                        Refine Design
-                    </button>
-                </div>
-
-                <div className="mt-8 bg-slate-50 p-6 rounded-lg shadow-md">
-                  <details>
-                    <summary className="text-xl font-semibold text-slate-800 cursor-pointer hover:text-slate-900 transition-colors">
-                      View Full AI Prompt
-                    </summary>
-                    <pre className="mt-4 p-4 bg-slate-100 rounded-lg text-sm text-slate-700 whitespace-pre-wrap font-mono overflow-x-auto border border-slate-200">
-                      <code>{prompt}</code>
-                    </pre>
-                  </details>
-                </div>
-
-                <div className="text-center mt-8">
-                    <button onClick={onStartOver} className="px-8 py-3 bg-slate-600 text-white font-bold rounded-lg hover:bg-slate-700 transition-colors">Start a New Design</button>
-                </div>
-            </div>
-            );
-        };
-
-        const INITIAL_DESIGN_PARAMS = {
-          roomType: 'Living Room',
-          roomUsage: [],
-          roomFeel: 'Cozy',
-          roomStyle: 'Modern',
-          specialRequests: ''
-        };
-
-        const HistoryView = ({ history }) => {
-            if (history.length === 0) return null;
-
-            return (
-                <div className="w-full max-w-5xl">
-                    <details className="bg-white rounded-lg shadow-md p-6">
-                        <summary className="text-2xl font-bold text-slate-800 cursor-pointer hover:text-slate-900 transition-colors">
-                            Generation History
-                        </summary>
-                        <p className="text-slate-500 mt-1 mb-4">Review your previous designs.</p>
-                        <div className="mt-6 space-y-6 max-h-[60vh] overflow-y-auto pr-4 -mr-4">
-                            {history.map(item => (
-                                <div key={item.id} className="p-4 border border-slate-200 rounded-lg bg-slate-50/50">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                        <div className="md:col-span-1 flex gap-4">
-                                            <div>
-                                                <p className="text-xs font-semibold text-slate-500 mb-1 text-center">Before</p>
-                                                <img src={item.originalImage} alt="Original" className="rounded-md shadow-sm aspect-square object-cover" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-semibold text-slate-500 mb-1 text-center">After</p>
-                                                <img src={item.generatedImage} alt="Generated" className="rounded-md shadow-sm aspect-square object-cover" />
-                                            </div>
-                                        </div>
-                                        <div className="md:col-span-3">
-                                            <p className="text-xs text-slate-500 font-mono">{new Date(item.id).toLocaleString()}</p>
-                                            <p className="text-slate-700 mt-2 text-sm leading-relaxed">{item.description}</p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4">
-                                        <details>
-                                            <summary className="text-sm font-semibold text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
-                                                View Full AI Prompt
-                                            </summary>
-                                            <pre className="mt-2 p-3 bg-slate-100 rounded-lg text-xs text-slate-700 whitespace-pre-wrap font-mono overflow-x-auto border border-slate-200">
-                                                <code>{item.prompt}</code>
-                                            </pre>
-                                        </details>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </details>
-                </div>
-            );
-        };
-
-        function App() {
-          const [step, setStep] = useState(AppStep.Upload);
-          const [originalImage, setOriginalImage] = useState({ data: '', file: null });
-          const [designParams, setDesignParams] = useState(INITIAL_DESIGN_PARAMS);
-          const [generatedResult, setGeneratedResult] = useState({ imageUrl: '', text: '', prompt: '' });
-          const [error, setError] = useState(null);
-          const [refinementPrompt, setRefinementPrompt] = useState('');
-          const [history, setHistory] = useState([]);
-
-          useEffect(() => {
-            const fetchHistory = async () => {
-                const savedHistory = await loadHistory();
-                setHistory(savedHistory);
-            };
-            fetchHistory();
-          }, []);
-
-
-          const currentUsageOptions = useMemo(() => {
-            return ROOM_USAGE_OPTIONS[designParams.roomType] || [];
-          }, [designParams.roomType]);
-
-          const handleImageUpload = async (file) => {
-            try {
-                const base64 = await toBase64(file);
-                setOriginalImage({ data: `data:${file.type};base64,${base64}`, file });
-                setStep(AppStep.Customize);
-            } catch(err) {
-                setError('Failed to read image file.');
-            }
-          };
-
-          const handleParamChange = (key, value) => {
-            setDesignParams(prev => {
-              const newState = { ...prev, [key]: value };
-              if (key === 'roomType') {
-                newState.roomUsage = [];
-              }
-              return newState;
-            });
-          };
-          
-          const handleUsageChange = (usage) => {
-              setDesignParams(prev => {
-                  const newUsage = prev.roomUsage.includes(usage) 
-                      ? prev.roomUsage.filter(u => u !== usage)
-                      : [...prev.roomUsage, usage];
-                  return { ...prev, roomUsage: newUsage };
-              });
-          };
-
-          const handleGenerate = useCallback(async () => {
-            if (!originalImage.file) {
-              setError("No image selected.");
-              return;
-            }
-            
-            if (designParams.roomUsage.length < 3 || designParams.roomUsage.length > 5) {
-                setError("Please select 3 to 5 room usages.");
-                return;
-            }
-
-            setError(null);
-            setStep(AppStep.Generating);
-
-            try {
-              const base64Data = originalImage.data.split(',')[1];
-              const result = await generateRoomMakeover(base64Data, originalImage.file.type, designParams);
-              setGeneratedResult(result);
-
-              const newHistoryItem = {
-                  id: Date.now(),
-                  originalImage: originalImage.data,
-                  generatedImage: result.imageUrl,
-                  description: result.text,
-                  prompt: result.prompt,
-              };
-              
-              const updatedHistory = [newHistoryItem, ...history];
-              setHistory(updatedHistory);
-              await saveDesign(newHistoryItem);
-
-              setStep(AppStep.Result);
-            } catch (err) {
-              const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-              setError(`Generation failed: ${errorMessage}`);
-              setStep(AppStep.Customize);
-            }
-          }, [originalImage, designParams, history]);
-          
-          const handleRefine = useCallback(async () => {
-            if (!originalImage.file || !refinementPrompt.trim()) {
-                setError("Please enter a refinement request.");
-                return;
-            }
-            setError(null);
-            setStep(AppStep.Generating);
-            
-            const refinedParams = {
-                ...designParams,
-                specialRequests: `${designParams.specialRequests}\n\n--- PREVIOUSLY GENERATED, NOW REFINE ---\nRefinement Request: ${refinementPrompt}`.trim()
-            };
-
-            try {
-                const base64Data = originalImage.data.split(',')[1];
-                const result = await generateRoomMakeover(base64Data, originalImage.file.type, refinedParams);
-                
-                setGeneratedResult(result);
-                
-                const newHistoryItem = {
-                  id: Date.now(),
-                  originalImage: originalImage.data,
-                  generatedImage: result.imageUrl,
-                  description: result.text,
-                  prompt: result.prompt,
-                };
-
-                const updatedHistory = [newHistoryItem, ...history];
-                setHistory(updatedHistory);
-                await saveDesign(newHistoryItem);
-
-                setDesignParams(refinedParams); 
-                setRefinementPrompt('');
-                setStep(AppStep.Result);
-            } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-                setError(`Refinement failed: ${errorMessage}`);
-                setStep(AppStep.Result);
-            }
-          }, [originalImage, designParams, refinementPrompt, history]);
-
-          const handleStartOver = () => {
-            setStep(AppStep.Upload);
-            setOriginalImage({ data: '', file: null });
-            setGeneratedResult({ imageUrl: '', text: '', prompt: '' });
-            setError(null);
-            setDesignParams(INITIAL_DESIGN_PARAMS);
-            setRefinementPrompt('');
-          };
-
-          const isGenerationDisabled = (designParams.roomUsage.length < 3 || designParams.roomUsage.length > 5);
-
-          return (
-            <div className="min-h-screen flex flex-col bg-slate-50">
-              <Header />
-              <main className="flex-grow container mx-auto px-4 py-8">
-                <div className="flex items-start justify-center">
-                    {step === AppStep.Upload && <ImageUploader onImageUpload={handleImageUpload} title="1. Upload a Photo of Your Room" subtitle="Start by showing us your current space."/>}
-
-                    {step === AppStep.Customize && (
-                      <div className="w-full max-w-5xl">
-                        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
-                        
-                        <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
-                            <div className="text-center mb-6">
-                                <h2 className="text-2xl font-bold text-slate-800">Your Room</h2>
-                                <img src={originalImage.data} alt="Your room" className="rounded-lg shadow-lg w-full max-w-sm mx-auto mt-4" />
-                            </div>
-                        </div>
-                                        
-                        <div className="bg-white p-6 rounded-lg shadow-md">
-                            <h2 className="text-3xl font-bold text-slate-800 mb-4 text-center">2. Customize Your Design</h2>
-                            <CardSelector
-                              title="Room Type"
-                              subtitle="What type of room is this?"
-                              options={ROOM_TYPE_OPTIONS}
-                              selectedValue={designParams.roomType}
-                              onChange={(val) => handleParamChange('roomType', val)}
-                              type="radio"
-                            />
-                            <CardSelector
-                              title="Room Usage"
-                              subtitle="How will you use this room? (Select 3-5)"
-                              options={currentUsageOptions}
-                              selectedValue={designParams.roomUsage}
-                              onChange={handleUsageChange}
-                              type="checkbox"
-                            />
-                            {designParams.roomUsage.length > 5 && (
-                              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative -mt-4 mb-4" role="alert">
-                                <strong className="font-bold">Too many selections!</strong>
-                                <span className="block sm:inline"> Please select a maximum of 5 room usages.</span>
-                              </div>
-                            )}
-                            <CardSelector
-                              title="Room Feel"
-                              subtitle="How should this room feel?"
-                              options={ROOM_FEEL_OPTIONS}
-                              selectedValue={designParams.roomFeel}
-                              onChange={(val) => handleParamChange('roomFeel', val)}
-                              type="radio"
-                            />
-                            <CardSelector
-                              title="Design Style"
-                              subtitle="Choose the aesthetic for your room."
-                              options={ROOM_STYLE_OPTIONS}
-                              selectedValue={designParams.roomStyle}
-                              onChange={(val) => handleParamChange('roomStyle', val)}
-                              type="radio"
-                            />
-                        </div>
-                        
-                        <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-                            <h2 className="text-2xl font-bold text-slate-800">
-                              3. Special Requests (Optional)
-                            </h2>
-                            <p className="text-slate-500 mt-1 mb-4">
-                              Any specific details? e.g., "I'd like a blue sofa" or "No leather furniture".
-                            </p>
-                            <textarea
-                                value={designParams.specialRequests}
-                                onChange={(e) => handleParamChange('specialRequests', e.target.value)}
-                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                rows={3}
-                                placeholder="Enter your request here..."
-                            />
-                        </div>
-                        
-                        <div className="text-center mt-8">
-                          <button
-                            onClick={handleGenerate}
-                            disabled={isGenerationDisabled}
-                            className="px-10 py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-lg disabled:bg-slate-400 disabled:cursor-not-allowed"
-                          >
-                            Generate My Design
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {step === AppStep.Generating && <GeneratingView />}
-                    
-                    {step === AppStep.Result && (
-                        <ResultView 
-                            original={originalImage.data}
-                            generated={generatedResult.imageUrl}
-                            description={generatedResult.text}
-                            prompt={generatedResult.prompt}
-                            designParams={designParams}
-                            onStartOver={handleStartOver}
-                            refinementPrompt={refinementPrompt}
-                            onRefinementChange={setRefinementPrompt}
-                            onRefine={handleRefine}
-                        />
-                    )}
-                </div>
-                <div className="mt-16 flex justify-center">
-                    <HistoryView history={history} />
-                </div>
-              </main>
-              <footer className="text-center py-4 text-slate-500 text-sm">
-                <p>Powered by Google Gemini. Designs are AI-generated.</p>
-              </footer>
-            </div>
-          );
-        }
-
-        // --- From index.tsx ---
-        const rootElement = document.getElementById('root');
-        if (!rootElement) {
-          throw new Error("Could not find root element to mount to");
-        }
-
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>
-        );
-    </script>
-  </body>
+        
+        // --- From services/database.ts ---
+        const HISTORY_KEY = 'ai_interior_designer_history';
+
+        const saveDesign = async (item) => {
+          try {
+            const existingHistoryString = localStorage.getItem(HISTORY_KEY);
+            const history = existingHistoryString ? JSON.parse(existingHistoryString) : [];
+            const updatedHistory = [item, ...history];
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
+          } catch (error) {
+            console.error("Failed to save design to localStorage", error);
+          }
+        };
+
+        const loadHistory = async () => {
+          try {
+            const historyString = localStorage.getItem(HISTORY_KEY);
+            if (historyString) {
+              return JSON.parse(historyString);
+            }
+            return [];
+          } catch (error) {
+            console.error("Failed to load history from localStorage", error);
+            return [];
+          }
+        };
+        
+        // --- From services/geminiService.ts ---
+        const createPrompt = (params) => {
+          const styleGuide = STYLE_GUIDES[params.roomStyle];
+          const moodGuide = params.roomFeel !== 'Let AI Decide' ? MOOD_GUIDES[params.roomFeel] : '';
+
+          const allItems = new Set();
+          const allActivities = [];
+
+          params.roomUsage.forEach(usage => {
+              const parts = usage.split('–');
+              const activity = parts[0]?.trim();
+              if (activity) {
+                  allActivities.push(activity);
+              }
+              const itemsString = parts[1]?.trim();
+              if (itemsString) {
+                  const items = itemsString.split(',').map(item => item.trim().toLowerCase());
+                  items.forEach(item => allItems.add(item));
+              }
+          });
+
+          const consolidatedItemList = Array.from(allItems).map(item => `- **${item.charAt(0).toUpperCase() + item.slice(1)}**`).join('\n');
+
+          const functionalRequirements = `
+        This room MUST be designed to accommodate the following activities: **${allActivities.join(', ')}**.
+
+        To achieve this, the final image is REQUIRED to contain the following complete and unabridged list of objects. This is not a suggestion list; it is a mandatory build sheet.
+
+        ### **Unified Object Checklist (MANDATORY)**
+        ${consolidatedItemList}
+        `;
+
+          const moodGuideDetails = params.roomFeel === 'Let AI Decide' 
+        ? `#### SPECIFIC MOOD TO CREATE: AI-Selected
+        - **Instruction**: Based on the chosen style ('${params.roomStyle}') and room type, select and apply the most appropriate mood and lighting from the lighting guide. Announce which mood you chose in your description.`
+        : `#### SPECIFIC MOOD TO CREATE: ${params.roomFeel}
+        ${moodGuide}`
+        ;
+
+          const prompt = PROMPT_TEMPLATE
+            .replace(/{{FUNCTIONAL_REQUIREMENTS}}/g, functionalRequirements)
+            .replace(/{{FIXED_VS_NON_FIXED_PARTS}}/g, FIXED_VS_NON_FIXED_PARTS)
+            .replace(/{{ROOM_STYLE}}/g, params.roomStyle)
+            .replace(/{{STYLE_GUIDE_DETAILS}}/g, styleGuide)
+            .replace(/{{ROOM_FEEL}}/g, params.roomFeel)
+            .replace(/{{LIGHTING_GUIDE}}/g, LIGHTING_GUIDE)
+            .replace(/{{MOOD_GUIDE_DETAILS}}/g, moodGuideDetails)
+            .replace(/{{SPECIAL_REQUESTS}}/g, params.specialRequests || 'None.');
+
+          return prompt;
+        };
+
+
+        const generateRoomMakeover = async (base64Image, mimeType, params) => {
+          // The original line checking for process.env.API_KEY is removed
+          // as the key is now hardcoded.
+
+          const ai = new GoogleGenAI({ apiKey: "AIzaSyAxGLDN94ddWqQ9GDNp1vdS68zIE446TME" });
+          const prompt = createPrompt(params);
+
+          const userImagePart = {
+            inlineData: {
+              data: base64Image,
+              mimeType: mimeType,
+            },
+          };
+
+          const parts = [userImagePart, { text: prompt }];
+
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+              parts: parts,
+            },
+            config: {
+              responseModalities: [Modality.IMAGE, Modality.TEXT],
+            },
+          });
+
+          let imageUrl = '';
+          let text = 'No description was generated.';
+
+          if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+              if (part.text) {
+                text = part.text;
+              } else if (part.inlineData) {
+                const base64ImageBytes = part.inlineData.data;
+                imageUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+              }
+            }
+          }
+
+
+          if (!imageUrl) {
+            if (text !== 'No description was generated.') {
+              throw new Error(`The API did not return an image. API response: ${text}`);
+            }
+            throw new Error("The API did not return an image. Please try again.");
+          }
+
+          return { imageUrl, text, prompt };
+        };
+
+        // --- From components/CardSelector.tsx ---
+        function CardSelector({ options, selectedValue, onChange, type, title, subtitle }) {
+          const isSelected = (value) => {
+            if (Array.isArray(selectedValue)) {
+              return selectedValue.includes(value);
+            }
+            return selectedValue === value;
+          };
+
+          return (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-slate-800">{title}</h2>
+              <p className="text-slate-500 mt-1 mb-4">{subtitle}</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {options.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={() => onChange(option.value)}
+                    className={`relative p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                      isSelected(option.value)
+                        ? 'border-blue-500 ring-2 ring-blue-500 shadow-lg'
+                        : 'border-slate-300 bg-white hover:border-blue-400 hover:shadow-md'
+                    }`}
+                  >
+                    {isSelected(option.value) && (
+                      <CheckCircleIcon className="absolute top-2 right-2 h-6 w-6 text-blue-500" />
+                    )}
+                    <h3 className="font-semibold text-slate-700">{option.label}</h3>
+                    {option.description && <p className="text-xs text-slate-500 mt-1">{option.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        // --- From App.tsx ---
+        const toBase64 = (file) => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve((reader.result).split(',')[1]);
+          reader.onerror = error => reject(error);
+        });
+
+        const Header = () => (
+          <header className="text-center py-8">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800">AI Interior Designer</h1>
+            <p className="text-lg text-slate-600 mt-2">Reimagine your space with the power of Gemini.</p>
+          </header>
+        );
+
+        const ImageUploader = ({ onImageUpload, title, subtitle }) => {
+          const [dragActive, setDragActive] = useState(false);
+
+          const handleDrag = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.type === "dragenter" || e.type === "dragover") {
+              setDragActive(true);
+            } else if (e.type === "dragleave") {
+              setDragActive(false);
+            }
+          };
+
+          const handleDrop = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragActive(false);
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+              onImageUpload(e.dataTransfer.files[0]);
+            }
+          };
+          
+          const handleChange = (e) => {
+            e.preventDefault();
+            if (e.target.files && e.target.files[0]) {
+              onImageUpload(e.target.files[0]);
+            }
+          };
+
+          return (
+            <div className="max-w-2xl mx-auto text-center">
+              <h2 className="text-2xl font-bold text-slate-800">{title}</h2>
+              <p className="text-slate-500 mt-1 mb-4">{subtitle}</p>
+              <label
+                htmlFor="dropzone-file"
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                className={`mt-4 flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-white transition-colors duration-300 ${dragActive ? 'border-blue-500' : 'border-slate-300 hover:border-blue-400'}`}
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <UploadIcon className="w-10 h-10 mb-4 text-slate-500"/>
+                    <p className="mb-2 text-sm text-slate-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                    <p className="text-xs text-slate-500">PNG, JPG, or WEBP</p>
+                </div>
+                <input id="dropzone-file" type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handleChange} />
+              </label>
+            </div>
+          );
+        };
+
+        const GeneratingView = () => (
+            <div className="text-center">
+                <div className="flex justify-center items-center">
+                    <SparklesIcon className="w-16 h-16 text-blue-500 animate-pulse" />
+                </div>
+                <h2 className="text-3xl font-bold text-slate-800 mt-6">Generating your new room...</h2>
+                <p className="text-slate-500 mt-2">The AI is working its magic. This may take a moment.</p>
+            </div>
+        );
+
+        const DesignBrief = ({ params }) => {
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-slate-200 h-full">
+              <h3 className="text-2xl font-bold text-center text-slate-700 mb-6">Design Brief</h3>
+              
+              <div className="space-y-4 text-sm">
+                <div>
+                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Room Type</h4>
+                  <p className="text-slate-800 text-base">{params.roomType}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Room Usage</h4>
+                  <ul className="space-y-2 mt-1">
+                    {params.roomUsage.map(usage => {
+                      const parts = usage.split('–');
+                      const activity = parts[0]?.trim();
+                      const itemsStr = parts[1]?.trim();
+                      const items = itemsStr ? itemsStr.split(',').map(item => item.trim()) : [];
+                      return (
+                        <li key={usage}>
+                          <p className="font-bold text-slate-700">{activity}</p>
+                          {items.length > 0 && (
+                            <ul className="list-disc list-inside pl-2 text-slate-600">
+                              {items.map(item => <li key={item}>{item.charAt(0).toUpperCase() + item.slice(1)}</li>)}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Room Feel</h4>
+                  <p className="text-slate-800 text-base">{params.roomFeel}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-500 uppercase tracking-wider text-xs mb-1">Design Style</h4>
+                  <p className="text-slate-800 text-base">{params.roomStyle}</p>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const ResultView = ({ original, generated, description, prompt, designParams, onStartOver, refinementPrompt, onRefinementChange, onRefine }) => {
+            
+            const handleDownload = () => {
+                const link = document.createElement('a');
+                link.href = generated;
+                const fileExtension = generated.split(';')[0].split('/')[1] || 'png';
+                link.download = `ai-room-makeover.${fileExtension}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            return (
+            <div className="w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+                    <div className="lg:col-span-1">
+                        <h3 className="text-2xl font-bold text-center text-slate-700 mb-4">Before</h3>
+                        <img src={original} alt="Original room" className="rounded-lg shadow-xl w-full" />
+                    </div>
+                    
+                    <div className="hidden lg:block lg:col-span-1">
+                        <DesignBrief params={designParams} />
+                    </div>
+
+                    <div className="lg:col-span-1">
+                         <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-2xl font-bold text-slate-700">After</h3>
+                            <button 
+                                onClick={handleDownload} 
+                                className="flex items-center px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors"
+                                aria-label="Download generated image"
+                            >
+                                <DownloadIcon className="w-5 h-5 mr-2"/>
+                                Download
+                            </button>
+                        </div>
+                        <img src={generated} alt="AI generated room" className="rounded-lg shadow-xl w-full" />
+                    </div>
+                </div>
+                
+                <div className="block lg:hidden mt-8">
+                    <DesignBrief params={designParams} />
+                </div>
+
+                <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+                    <h4 className="text-xl font-semibold text-slate-800">AI Design Notes</h4>
+                    <p className="text-slate-600 mt-2">{description}</p>
+                </div>
+
+                <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+                    <h4 className="text-xl font-semibold text-slate-800">Make a Change</h4>
+                    <p className="text-slate-600 mt-1 mb-4">Not quite right? Tell the AI what to adjust.</p>
+                    <textarea
+                      value={refinementPrompt}
+                      onChange={(e) => onRefinementChange(e.target.value)}
+                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      rows={2}
+                      placeholder="e.g., 'Make the sofa blue' or 'Add a bigger rug'"
+                    />
+                    <button 
+                        onClick={onRefine}
+                        disabled={!refinementPrompt.trim()}
+                        className="mt-4 w-full px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                        <SparklesIcon className="w-5 h-5 mr-2" />
+                        Refine Design
+                    </button>
+                </div>
+
+                <div className="mt-8 bg-slate-50 p-6 rounded-lg shadow-md">
+                  <details>
+                    <summary className="text-xl font-semibold text-slate-800 cursor-pointer hover:text-slate-900 transition-colors">
+                      View Full AI Prompt
+                    </summary>
+                    <pre className="mt-4 p-4 bg-slate-100 rounded-lg text-sm text-slate-700 whitespace-pre-wrap font-mono overflow-x-auto border border-slate-200">
+                      <code>{prompt}</code>
+                    </pre>
+                  </details>
+                </div>
+
+                <div className="text-center mt-8">
+                    <button onClick={onStartOver} className="px-8 py-3 bg-slate-600 text-white font-bold rounded-lg hover:bg-slate-700 transition-colors">Start a New Design</button>
+                </div>
+            </div>
+            );
+        };
+
+        const INITIAL_DESIGN_PARAMS = {
+          roomType: 'Living Room',
+          roomUsage: [],
+          roomFeel: 'Cozy',
+          roomStyle: 'Modern',
+          specialRequests: ''
+        };
+
+        const HistoryView = ({ history }) => {
+            if (history.length === 0) return null;
+
+            return (
+                <div className="w-full max-w-5xl">
+                    <details className="bg-white rounded-lg shadow-md p-6">
+                        <summary className="text-2xl font-bold text-slate-800 cursor-pointer hover:text-slate-900 transition-colors">
+                            Generation History
+                        </summary>
+                        <p className="text-slate-500 mt-1 mb-4">Review your previous designs.</p>
+                        <div className="mt-6 space-y-6 max-h-[60vh] overflow-y-auto pr-4 -mr-4">
+                            {history.map(item => (
+                                <div key={item.id} className="p-4 border border-slate-200 rounded-lg bg-slate-50/50">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                        <div className="md:col-span-1 flex gap-4">
+                                            <div>
+                                                <p className="text-xs font-semibold text-slate-500 mb-1 text-center">Before</p>
+                                                <img src={item.originalImage} alt="Original" className="rounded-md shadow-sm aspect-square object-cover" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-slate-500 mb-1 text-center">After</p>
+                                                <img src={item.generatedImage} alt="Generated" className="rounded-md shadow-sm aspect-square object-cover" />
+                                            </div>
+                                        </div>
+                                        <div className="md:col-span-3">
+                                            <p className="text-xs text-slate-500 font-mono">{new Date(item.id).toLocaleString()}</p>
+                                            <p className="text-slate-700 mt-2 text-sm leading-relaxed">{item.description}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4">
+                                        <details>
+                                            <summary className="text-sm font-semibold text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                                                View Full AI Prompt
+                                            </summary>
+                                            <pre className="mt-2 p-3 bg-slate-100 rounded-lg text-xs text-slate-700 whitespace-pre-wrap font-mono overflow-x-auto border border-slate-200">
+                                                <code>{item.prompt}</code>
+                                            </pre>
+                                        </details>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </details>
+                </div>
+            );
+        };
+
+        function App() {
+          const [step, setStep] = useState(AppStep.Upload);
+          const [originalImage, setOriginalImage] = useState({ data: '', file: null });
+          const [designParams, setDesignParams] = useState(INITIAL_DESIGN_PARAMS);
+          const [generatedResult, setGeneratedResult] = useState({ imageUrl: '', text: '', prompt: '' });
+          const [error, setError] = useState(null);
+          const [refinementPrompt, setRefinementPrompt] = useState('');
+          const [history, setHistory] = useState([]);
+
+          useEffect(() => {
+            const fetchHistory = async () => {
+                const savedHistory = await loadHistory();
+                setHistory(savedHistory);
+            };
+            fetchHistory();
+          }, []);
+
+
+          const currentUsageOptions = useMemo(() => {
+            return ROOM_USAGE_OPTIONS[designParams.roomType] || [];
+          }, [designParams.roomType]);
+
+          const handleImageUpload = async (file) => {
+            try {
+                const base64 = await toBase64(file);
+                setOriginalImage({ data: `data:${file.type};base64,${base64}`, file });
+                setStep(AppStep.Customize);
+            } catch(err) {
+                setError('Failed to read image file.');
+            }
+          };
+
+          const handleParamChange = (key, value) => {
+            setDesignParams(prev => {
+              const newState = { ...prev, [key]: value };
+              if (key === 'roomType') {
+                newState.roomUsage = [];
+              }
+              return newState;
+            });
+          };
+          
+          const handleUsageChange = (usage) => {
+              setDesignParams(prev => {
+                  const newUsage = prev.roomUsage.includes(usage) 
+                      ? prev.roomUsage.filter(u => u !== usage)
+                      : [...prev.roomUsage, usage];
+                  return { ...prev, roomUsage: newUsage };
+              });
+          };
+
+          const handleGenerate = useCallback(async () => {
+            if (!originalImage.file) {
+              setError("No image selected.");
+              return;
+            }
+            
+            if (designParams.roomUsage.length < 3 || designParams.roomUsage.length > 5) {
+                setError("Please select 3 to 5 room usages.");
+                return;
+            }
+
+            setError(null);
+            setStep(AppStep.Generating);
+
+            try {
+              const base64Data = originalImage.data.split(',')[1];
+              const result = await generateRoomMakeover(base64Data, originalImage.file.type, designParams);
+              setGeneratedResult(result);
+
+              const newHistoryItem = {
+                  id: Date.now(),
+                  originalImage: originalImage.data,
+                  generatedImage: result.imageUrl,
+                  description: result.text,
+                  prompt: result.prompt,
+              };
+              
+              const updatedHistory = [newHistoryItem, ...history];
+              setHistory(updatedHistory);
+              await saveDesign(newHistoryItem);
+
+              setStep(AppStep.Result);
+            } catch (err) {
+              const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+              setError(`Generation failed: ${errorMessage}`);
+              setStep(AppStep.Customize);
+            }
+          }, [originalImage, designParams, history]);
+          
+          const handleRefine = useCallback(async () => {
+            if (!originalImage.file || !refinementPrompt.trim()) {
+                setError("Please enter a refinement request.");
+                return;
+            }
+            setError(null);
+            setStep(AppStep.Generating);
+            
+            const refinedParams = {
+                ...designParams,
+                specialRequests: `${designParams.specialRequests}\n\n--- PREVIOUSLY GENERATED, NOW REFINE ---\nRefinement Request: ${refinementPrompt}`.trim()
+            };
+
+            try {
+                const base64Data = originalImage.data.split(',')[1];
+                const result = await generateRoomMakeover(base64Data, originalImage.file.type, refinedParams);
+                
+                setGeneratedResult(result);
+                
+                const newHistoryItem = {
+                  id: Date.now(),
+                  originalImage: originalImage.data,
+                  generatedImage: result.imageUrl,
+                  description: result.text,
+                  prompt: result.prompt,
+                };
+
+                const updatedHistory = [newHistoryItem, ...history];
+                setHistory(updatedHistory);
+                await saveDesign(newHistoryItem);
+
+                setDesignParams(refinedParams); 
+                setRefinementPrompt('');
+                setStep(AppStep.Result);
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+                setError(`Refinement failed: ${errorMessage}`);
+                setStep(AppStep.Result);
+            }
+          }, [originalImage, designParams, refinementPrompt, history]);
+
+          const handleStartOver = () => {
+            setStep(AppStep.Upload);
+            setOriginalImage({ data: '', file: null });
+            setGeneratedResult({ imageUrl: '', text: '', prompt: '' });
+            setError(null);
+            setDesignParams(INITIAL_DESIGN_PARAMS);
+            setRefinementPrompt('');
+          };
+
+          const isGenerationDisabled = (designParams.roomUsage.length < 3 || designParams.roomUsage.length > 5);
+
+          return (
+            <div className="min-h-screen flex flex-col bg-slate-50">
+              <Header />
+              <main className="flex-grow container mx-auto px-4 py-8">
+                <div className="flex items-start justify-center">
+                    {step === AppStep.Upload && <ImageUploader onImageUpload={handleImageUpload} title="1. Upload a Photo of Your Room" subtitle="Start by showing us your current space."/>}
+
+                    {step === AppStep.Customize && (
+                      <div className="w-full max-w-5xl">
+                        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
+                        
+                        <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
+                            <div className="text-center mb-6">
+                                <h2 className="text-2xl font-bold text-slate-800">Your Room</h2>
+                                <img src={originalImage.data} alt="Your room" className="rounded-lg shadow-lg w-full max-w-sm mx-auto mt-4" />
+                            </div>
+                        </div>
+                                        
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <h2 className="text-3xl font-bold text-slate-800 mb-4 text-center">2. Customize Your Design</h2>
+                            <CardSelector
+                              title="Room Type"
+                              subtitle="What type of room is this?"
+                              options={ROOM_TYPE_OPTIONS}
+                              selectedValue={designParams.roomType}
+                              onChange={(val) => handleParamChange('roomType', val)}
+                              type="radio"
+                            />
+                            <CardSelector
+                              title="Room Usage"
+                              subtitle="How will you use this room? (Select 3-5)"
+                              options={currentUsageOptions}
+                              selectedValue={designParams.roomUsage}
+                              onChange={handleUsageChange}
+                              type="checkbox"
+                            />
+                            {designParams.roomUsage.length > 5 && (
+                              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative -mt-4 mb-4" role="alert">
+                                <strong className="font-bold">Too many selections!</strong>
+                                <span className="block sm:inline"> Please select a maximum of 5 room usages.</span>
+                              </div>
+                            )}
+                            <CardSelector
+                              title="Room Feel"
+                              subtitle="How should this room feel?"
+                              options={ROOM_FEEL_OPTIONS}
+                              selectedValue={designParams.roomFeel}
+                              onChange={(val) => handleParamChange('roomFeel', val)}
+                              type="radio"
+                            />
+                            <CardSelector
+                              title="Design Style"
+                              subtitle="Choose the aesthetic for your room."
+                              options={ROOM_STYLE_OPTIONS}
+                              selectedValue={designParams.roomStyle}
+                              onChange={(val) => handleParamChange('roomStyle', val)}
+                              type="radio"
+                            />
+                        </div>
+                        
+                        <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+              _B_a_c_k_t_o_ _U_s_e_r_ _
+                            <p className="text-slate-500 mt-1 mb-4">
+                              Any specific details? e.g., "I'd like a blue sofa" or "No leather furniture".
+                            </p>
+                            <textarea
+                                value={designParams.specialRequests}
+                                onChange={(e) => handleParamChange('specialRequests', e.target.value)}
+                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                rows={3}
+                                placeholder="Enter your request here..."
+                            />
+                        </div>
+                        
+                        <div className="text-center mt-8">
+                          <button
+                            onClick={handleGenerate}
+                            disabled={isGenerationDisabled}
+                            className="px-10 py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-lg disabled:bg-slate-400 disabled:cursor-not-allowed"
+                          >
+                            Generate My Design
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {step === AppStep.Generating && <GeneratingView />}
+                    
+                    {step === AppStep.Result && (
+                        <ResultView 
+                            original={originalImage.data}
+                            generated={generatedResult.imageUrl}
+                            description={generatedResult.text}
+                            prompt={generatedResult.prompt}
+                            designParams={designParams}
+                            onStartOver={handleStartOver}
+                            refinementPrompt={refinementPrompt}
+                            onRefinementChange={setRefinementPrompt}
+                            onRefine={handleRefine}
+                        />
+                    )}
+                </div>
+                <div className="mt-16 flex justify-center">
+                    <HistoryView history={history} />
+                </div>
+              </main>
+              <footer className="text-center py-4 text-slate-500 text-sm">
+                <p>Powered by Google Gemini. Designs are AI-generated.</p>
+              </footer>
+            </div>
+          );
+        }
+
+        // --- From index.tsx ---
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+          throw new Error("Could not find root element to mount to");
+        }
+
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
+    </script>
+  </body>
 </html>
