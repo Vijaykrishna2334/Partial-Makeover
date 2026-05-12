@@ -1,107 +1,68 @@
-# Partial-Makeover
+<div align="center">
 
-# AI Interior Designer using Gemini
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,12,20&height=160&section=header&text=Partial%20Makeover&fontSize=40&fontColor=fff&animation=twinkling&fontAlignY=36&desc=AI%20Interior%20Designer%20%E2%80%94%20Before%20%26%20After%20Room%20Transformations%20with%20Gemini&descAlignY=58&descSize=13" width="100%"/>
 
-This web application allows users to upload a photo of their room, select design preferences, and receive a photorealistic interior design makeover powered by Google's Gemini API.
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Gemini](https://img.shields.io/badge/Gemini_2.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-![AI Interior Designer Demo](https://storage.googleapis.com/aistudio-hosting/project-assets/21151a66-2244-46f9-8692-f044f535d4f3/partial-makeover-demo.gif)
+**Upload a room photo → choose a style → get a photorealistic AI makeover**
+
+</div>
+
+---
+
+## 🎯 What It Does
+
+Upload any room photo, select your design preferences, and receive a **photorealistic interior design makeover** powered by Google's `gemini-2.5-flash-image` model. Non-structural elements are redesigned while preserving the room's layout and architecture.
+
+---
 
 ## ✨ Features
 
--   **Image Upload**: Simple drag-and-drop or file picker interface for uploading room photos.
--   **Deep Customization**: Users can specify:
-    -   **Room Type**: Living Room, Kitchen, Bedroom, etc.
-    -   **Room Usage**: Select 3-5 functional activities for the space (e.g., "Watching TV," "Reading").
-    -   **Room Feel**: Choose a desired mood like 'Cozy', 'Bright', or 'Minimal'.
-    -   **Design Style**: Select from 10 distinct interior design aesthetics (e.g., Modern, Scandinavian, Coastal).
-    -   **Special Requests**: Add custom text prompts for specific details (e.g., "Include a blue sofa").
--   **AI-Powered Generation**: Leverages the `gemini-2.5-flash-image` model to perform a partial makeover, changing only the non-structural elements of the room.
--   **Interactive Results**:
-    -   Displays a clear "Before vs. After" comparison.
-    -   Shows a detailed "Design Brief" summarizing the user's choices.
-    -   Presents AI-generated design notes explaining the changes.
--   **Iterative Refinement**: Users can provide additional text prompts to refine the generated image without starting over.
--   **Generation History**: Automatically saves every design to the browser's `localStorage` for review.
--   **Prompt Transparency**: Allows users to view the exact, detailed prompt that was sent to the AI.
--   **Download**: Save the final generated high-quality image.
+| Feature | Description |
+|---|---|
+| 🖼️ **Image Upload** | Drag-and-drop or file picker for room photos |
+| 🛋️ **Room Type** | Living Room, Kitchen, Bedroom, and more |
+| 🎨 **Design Styles** | 10 aesthetics — Modern, Scandinavian, Coastal, etc. |
+| 💡 **Room Feel** | Cozy, Bright, Minimal, and other mood options |
+| ✏️ **Custom Prompts** | Add specific requests ("Include a blue sofa") |
+| 🔄 **Before vs After** | Side-by-side comparison view |
+| 🔁 **Iterative Refinement** | Refine the result with follow-up prompts |
+| 📜 **Generation History** | Auto-saved to `localStorage` |
+| 📥 **Download** | Save the final high-quality generated image |
 
-## 🛠️ Tech Stack
+---
 
--   **Frontend**: React (with Hooks), TypeScript
--   **AI Model**: Google Gemini (`gemini-2.5-flash-image`) via the `@google/genai` SDK
--   **Styling**: Tailwind CSS
--   **Bundling**: The project is self-contained in `index.html` using an `importmap` and Babel Standalone for in-browser JSX/TS transpilation, requiring no local build step.
+## 🛠 Tech Stack
 
-## 🚀 Getting Started
+| Technology | Purpose |
+|---|---|
+| **React + TypeScript** | Frontend UI with hooks |
+| **Tailwind CSS** | Styling |
+| **Gemini 2.5 Flash Image** | AI room generation |
+| **@google/genai SDK** | API integration |
+| **importmap + Babel** | Zero-build-step browser bundling |
 
-This project is designed to run directly in the browser without any complex setup or build process.
+---
 
-### Prerequisites
+## ⚡ Quick Start
 
--   A modern web browser (like Chrome, Firefox, or Edge).
--   A Google Gemini API Key. You can get one from [Google AI Studio](https://aistudio.google.com/).
+No build step required — runs directly in the browser.
 
-### Installation & Setup
+1. Clone or download the repository
+2. Open `index.html` and replace `process.env.API_KEY` with your Gemini API key
+3. Open `index.html` in any modern browser
 
-1.  **Clone the repository or download the files:**
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/ai-interior-designer.git
-    cd ai-interior-designer
-    ```
+Get a Gemini API key at [Google AI Studio](https://aistudio.google.com/)
 
-2.  **Set up your API Key:**
-    The application is configured to read the API key from `process.env.API_KEY`. Since this is a client-side project without a build step, you need to make the key available to the script. The simplest way is to directly replace the placeholder in the code.
+---
 
-    -   Open the `index.html` file.
-    -   Find the line `if (!process.env.API_KEY)` and the `new GoogleGenAI(...)` calls.
-    -   Replace `process.env.API_KEY` with your actual Gemini API key string.
+## 📬 Contact
 
-    For example, change this:
-    ```javascript
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    ```
-    To this:
-    ```javascript
-    const ai = new GoogleGenAI({ apiKey: "YOUR_GEMINI_API_KEY_HERE" });
-    ```
-    *Note: Remember to do this for all instances where `process.env.API_KEY` is used.*
+**Built by [Vijay Krishna](https://github.com/Vijaykrishna2334)**
+- 📧 vijaykrishna2334@gmail.com
+- 💼 [LinkedIn](https://linkedin.com/in/vijaykrishna2334)
 
-    **⚠️ Security Warning**: Do not commit your API key directly to a public GitHub repository. This method is suitable for local testing only. For deployment, use a secure method to provide the key.
-
-3.  **Open the application:**
-    -   Simply open the `index.html` file in your web browser. You can do this by double-clicking the file or using a simple local server extension like Live Server for VS Code.
-
-## 📂 Project Structure
-
-Even though the final code is bundled into `index.html` for simplicity, the logical structure is as follows:
-
-```
-/
-├── index.html              # Main entry point, contains all HTML, CSS (via CDN), and JS.
-├── App.tsx                 # Main React application component, manages state and UI flow.
-├── components/             # Reusable React components.
-│   ├── CardSelector.tsx    # Component for selecting design options.
-│   └── icons.tsx           # SVG icon components.
-├── services/               # Logic for interacting with APIs and local storage.
-│   ├── geminiService.ts    # Handles communication with the Gemini API.
-│   ├── promptLibrary.ts    # Contains detailed style/mood guides for prompt construction.
-│   ├── promptTemplate.ts   # The main template for the AI prompt.
-│   └── database.ts         # Manages saving and loading history from localStorage.
-├── types.ts                # TypeScript type definitions.
-├── constants.ts            # Constant data like options for selectors.
-└── readme.md               # This file.
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! If you have suggestions for improvements or find a bug, please feel free to open an issue or submit a pull request.
-
-1.  Fork the repository.
-2.  Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,12,20&height=80&section=footer" width="100%"/>
