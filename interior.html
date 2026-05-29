@@ -1318,7 +1318,7 @@ The lighting design is critical. It must follow these rules and evoke the specif
           // The original line checking for process.env.API_KEY is removed
           // as the key is now hardcoded.
 
-          const ai = new GoogleGenAI({ apiKey: "AIzaSyCCCfuYDe9D4nfYm_wNmbdbKW94ZvMoobQ" });
+          const ai = new GoogleGenAI({ apiKey: document.getElementById('gemini-api-key').value });
           const prompt = createPrompt(params);
 
           const userImagePart = {
