@@ -20,6 +20,15 @@
 </script>
   </head>
   <body class="bg-slate-50">
+
+    <div style="background:#1e293b;padding:12px 24px;display:flex;align-items:center;gap:12px">
+      <label style="color:#94a3b8;font-size:14px;font-family:sans-serif">Gemini API Key:</label>
+      <input id="gemini-api-key" type="password" placeholder="AIza..." 
+        style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:8px 12px;border-radius:8px;font-size:14px;width:320px" />
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" 
+        style="color:#818cf8;font-size:12px">Get free key →</a>
+    </div>
+
     <div id="root"></div>
     <script type="text/babel" data-type="module">
         import React, { useState, useCallback, useMemo, useEffect } from 'react';
