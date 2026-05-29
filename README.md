@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,12,20&height=160&section=header&text=AI%20Interior%20Designer&fontSize=40&fontColor=fff&animation=twinkling&fontAlignY=36&desc=AI%20Interior%20Designer%20%E2%80%94%20Before%20%26%20After%20Room%20Transformations%20with%20Gemini&descAlignY=58&descSize=13" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,12,20&height=160&section=header&text=AI%20Interior%20Designer&fontSize=40&fontColor=fff&animation=twinkling&fontAlignY=36&desc=Before%20%26%20After%20Room%20Transformations%20with%20Gemini&descAlignY=58&descSize=13" width="100%"/>
 
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
