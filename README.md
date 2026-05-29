@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,12,20&height=160&section=header&text=AI%20Interior%20Designer&fontSize=40&fontColor=fff&animation=twinkling&fontAlignY=36&desc=Before%20%26%20After%20Room%20Transformations%20with%20Gemini&descAlignY=58&descSize=13" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;customColorList=6,12,20&amp;height=160&amp;section=header&amp;text=AI%20Interior%20Designer&amp;fontSize=40&amp;fontColor=fff&amp;animation=twinkling&amp;fontAlignY=36&amp;desc=Before%20and%20After%20Room%20Transformations%20with%20Gemini&amp;descAlignY=58&amp;descSize=13" width="100%"/>
 
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
@@ -30,10 +30,11 @@ Upload any room photo, select your design preferences, and receive a **photoreal
 | ✏️ **Custom Prompts** | Add specific requests ("Include a blue sofa") |
 | 🔄 **Before vs After** | Side-by-side comparison view |
 | 🔁 **Iterative Refinement** | Refine the result with follow-up prompts |
-| 📜 **Generation History** | Auto-saved to `localStorage` |
+| 📜 **Generation History** | Auto-saved to localStorage |
 | 📥 **Download** | Save the final high-quality generated image |
 
 ---
+
 ## 📸 Screenshots
 
 ![Upload Screen](Screenshot%202026-05-29%20185849.png)
@@ -41,6 +42,7 @@ Upload any room photo, select your design preferences, and receive a **photoreal
 ![Result](Screenshot%202026-05-29%20190007.png)
 ![Generated Room](ai-room-makeover.png)
 
+---
 
 ## 🛠 Tech Stack
 
@@ -64,12 +66,13 @@ No build step required — runs directly in the browser.
 4. Upload a room photo and generate
 
 🔗 **[Live Demo](https://vijaykrishna2334.github.io/Partial-Makeover/interior.html)**
+
 ---
 
 ## 📬 Contact
 
 **Built by [Vijay Krishna](https://github.com/Vijaykrishna2334)**
 - 📧 vijaykrishna2334@gmail.com
-- 💼 [LinkedIn](https://linkedin.com/in/vijaykrishna2334)
+- 💼 [LinkedIn](https://linkedin.com/in/vijaykrishna123)
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,12,20&height=80&section=footer" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;customColorList=6,12,20&amp;height=80&amp;section=footer" width="100%"/>
