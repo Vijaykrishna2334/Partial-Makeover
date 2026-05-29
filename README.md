@@ -34,6 +34,13 @@ Upload any room photo, select your design preferences, and receive a **photoreal
 | 📥 **Download** | Save the final high-quality generated image |
 
 ---
+## 📸 Screenshots
+
+![Upload Screen](Screenshot%202026-05-29%20185849.png)
+![Customize](Screenshot%202026-05-29%20185918.png)
+![Result](Screenshot%202026-05-29%20190007.png)
+![Generated Room](ai-room-makeover.png)
+
 
 ## 🛠 Tech Stack
 
@@ -51,12 +58,12 @@ Upload any room photo, select your design preferences, and receive a **photoreal
 
 No build step required — runs directly in the browser.
 
-1. Clone or download the repository
-2. Open `index.html` and replace `process.env.API_KEY` with your Gemini API key
-3. Open `index.html` in any modern browser
+1. Get a free Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Open `interior.html` in any modern browser
+3. Paste your API key in the bar at the top
+4. Upload a room photo and generate
 
-Get a Gemini API key at [Google AI Studio](https://aistudio.google.com/)
-
+🔗 **[Live Demo](https://vijaykrishna2334.github.io/Partial-Makeover/interior.html)**
 ---
 
 ## 📬 Contact
